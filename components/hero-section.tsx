@@ -1,13 +1,35 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Calendar, MapPin, Trophy } from "lucide-react"
+import { FEST_CONFIG } from "@/lib/supabase/types"
 
 export function HeroSection() {
   const [mounted, setMounted] = useState(false)
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0 })
 
   useEffect(() => {
     setMounted(true)
+    
+    // Countdown to fest start date
+    const targetDate = new Date("2025-12-15T00:00:00")
+    
+    const updateCountdown = () => {
+      const now = new Date()
+      const diff = targetDate.getTime() - now.getTime()
+      
+      if (diff > 0) {
+        setCountdown({
+          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+        })
+      }
+    }
+    
+    updateCountdown()
+    const interval = setInterval(updateCountdown, 60000)
+    return () => clearInterval(interval)
   }, [])
 
   return (
@@ -49,7 +71,7 @@ export function HeroSection() {
           }`}
         >
           <span className="inline-block px-6 py-2 glass text-xs tracking-[0.2em] uppercase rounded-full font-medium text-muted-foreground">
-            Department of Computer Science
+            {FEST_CONFIG.department} • {FEST_CONFIG.studentUnion}
           </span>
         </div>
 
@@ -60,10 +82,35 @@ export function HeroSection() {
           }`}
           style={{ transitionDelay: "200ms" }}
         >
-          <span className="gradient-text">Art moves the mind</span>
+          <span className="gradient-text">{FEST_CONFIG.name}</span>
           <br />
-          <span className="text-foreground">sport moves the body</span>
+          <span className="text-foreground text-3xl md:text-4xl lg:text-5xl">{FEST_CONFIG.tagline}</span>
         </h1>
+
+        {/* Countdown */}
+        {countdown.days > 0 && (
+          <div
+            className={`mt-8 flex items-center gap-4 transition-all duration-700 ease-out ${
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+            }`}
+            style={{ transitionDelay: "300ms" }}
+          >
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-accent">{countdown.days}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">Days</div>
+            </div>
+            <span className="text-2xl text-muted-foreground">:</span>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold">{countdown.hours}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">Hours</div>
+            </div>
+            <span className="text-2xl text-muted-foreground">:</span>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold">{countdown.minutes}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">Mins</div>
+            </div>
+          </div>
+        )}
 
         {/* Subtitle */}
         <p
@@ -72,8 +119,8 @@ export function HeroSection() {
           }`}
           style={{ transitionDelay: "400ms" }}
         >
-          The 11th Student Union MCAS presents an extraordinary celebration of creativity and athleticism. Join us for
-          an unforgettable experience.
+          {FEST_CONFIG.fullName} – An extraordinary celebration of creativity, talent, and sportsmanship. 
+          Join us for {FEST_CONFIG.days} days of unforgettable experiences.
         </p>
 
         {/* Event Info Bar */}
@@ -83,19 +130,28 @@ export function HeroSection() {
           }`}
           style={{ transitionDelay: "600ms" }}
         >
-          <div className="flex flex-col">
-            <span className="text-muted-foreground uppercase tracking-wider text-xs">Location</span>
-            <span className="font-medium">Main Campus Arena</span>
+          <div className="flex items-center gap-2">
+            <MapPin size={16} className="text-accent" />
+            <div className="flex flex-col">
+              <span className="text-muted-foreground uppercase tracking-wider text-xs">Location</span>
+              <span className="font-medium">{FEST_CONFIG.college}</span>
+            </div>
           </div>
           <div className="w-px h-8 bg-border hidden sm:block" />
-          <div className="flex flex-col">
-            <span className="text-muted-foreground uppercase tracking-wider text-xs">Date</span>
-            <span className="font-medium">December 15-20, 2025</span>
+          <div className="flex items-center gap-2">
+            <Calendar size={16} className="text-accent" />
+            <div className="flex flex-col">
+              <span className="text-muted-foreground uppercase tracking-wider text-xs">Date</span>
+              <span className="font-medium">{FEST_CONFIG.dates}</span>
+            </div>
           </div>
           <div className="w-px h-8 bg-border hidden sm:block" />
-          <div className="flex flex-col">
-            <span className="text-muted-foreground uppercase tracking-wider text-xs">Admission</span>
-            <span className="font-medium text-accent">Free Entry</span>
+          <div className="flex items-center gap-2">
+            <Trophy size={16} className="text-accent" />
+            <div className="flex flex-col">
+              <span className="text-muted-foreground uppercase tracking-wider text-xs">Events</span>
+              <span className="font-medium text-accent">{FEST_CONFIG.days} Days of Action</span>
+            </div>
           </div>
         </div>
 

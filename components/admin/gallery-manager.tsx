@@ -1,50 +1,129 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Pencil, Trash2, X, Check, GripVertical } from "lucide-react"
-import { initialGallery, type GalleryItem } from "@/lib/data"
+import { Pencil, Trash2, X, Check, GripVertical, Loader2 } from "lucide-react"
+import type { DbGalleryItem } from "@/lib/supabase/types"
+
+interface GalleryItemWithSpan extends DbGalleryItem {
+  span: string
+}
 
 export function GalleryManager() {
-  const [gallery, setGallery] = useState<GalleryItem[]>(initialGallery)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [editForm, setEditForm] = useState<Partial<GalleryItem>>({})
+  const [gallery, setGallery] = useState<GalleryItemWithSpan[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<Partial<GalleryItemWithSpan>>({})
   const [showAddForm, setShowAddForm] = useState(false)
-  const [newItem, setNewItem] = useState<Partial<GalleryItem>>({
+  const [newItem, setNewItem] = useState<Partial<GalleryItemWithSpan>>({
     title: "",
     src: "/placeholder.svg?height=400&width=600",
     span: "col-span-1 row-span-1",
   })
 
-  const handleEdit = (item: GalleryItem) => {
+  const spanPatterns = [
+    "col-span-2 row-span-2",
+    "col-span-1 row-span-1",
+    "col-span-1 row-span-1",
+    "col-span-1 row-span-1",
+    "col-span-2 row-span-1",
+    "col-span-1 row-span-1",
+  ]
+
+  useEffect(() => {
+    fetchGallery()
+  }, [])
+
+  async function fetchGallery() {
+    try {
+      const res = await fetch("/api/gallery")
+      if (res.ok) {
+        const data: DbGalleryItem[] = await res.json()
+        const withSpans = data.map((item, index) => ({
+          ...item,
+          span: spanPatterns[index % spanPatterns.length],
+        }))
+        setGallery(withSpans)
+      }
+    } catch (error) {
+      console.error("Failed to fetch gallery:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEdit = (item: GalleryItemWithSpan) => {
     setEditingId(item.id)
     setEditForm(item)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editingId && editForm) {
-      setGallery(gallery.map((g) => (g.id === editingId ? { ...g, ...editForm } : g)))
-      setEditingId(null)
-      setEditForm({})
+      setSaving(true)
+      try {
+        const res = await fetch(`/api/gallery/${editingId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: editForm.title,
+            src: editForm.src,
+          }),
+        })
+        if (res.ok) {
+          const updated = await res.json()
+          setGallery(gallery.map((g) => (g.id === editingId ? { ...updated, span: editForm.span } : g)))
+          setEditingId(null)
+          setEditForm({})
+        }
+      } catch (error) {
+        console.error("Failed to update gallery item:", error)
+      } finally {
+        setSaving(false)
+      }
     }
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this gallery item?")) {
-      setGallery(gallery.filter((g) => g.id !== id))
+      try {
+        const res = await fetch(`/api/gallery/${id}`, { method: "DELETE" })
+        if (res.ok) {
+          setGallery(gallery.filter((g) => g.id !== id))
+        }
+      } catch (error) {
+        console.error("Failed to delete gallery item:", error)
+      }
     }
   }
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (newItem.title) {
-      const newId = Math.max(...gallery.map((g) => g.id), 0) + 1
-      setGallery([...gallery, { ...newItem, id: newId } as GalleryItem])
-      setNewItem({
-        title: "",
-        src: "/placeholder.svg?height=400&width=600",
-        span: "col-span-1 row-span-1",
-      })
-      setShowAddForm(false)
+      setSaving(true)
+      try {
+        const res = await fetch("/api/gallery", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: newItem.title,
+            src: newItem.src,
+          }),
+        })
+        if (res.ok) {
+          const created = await res.json()
+          setGallery([...gallery, { ...created, span: newItem.span || "col-span-1 row-span-1" }])
+          setNewItem({
+            title: "",
+            src: "/placeholder.svg?height=400&width=600",
+            span: "col-span-1 row-span-1",
+          })
+          setShowAddForm(false)
+        }
+      } catch (error) {
+        console.error("Failed to create gallery item:", error)
+      } finally {
+        setSaving(false)
+      }
     }
   }
 
@@ -54,6 +133,14 @@ export function GalleryManager() {
     { value: "col-span-1 row-span-2", label: "Tall (1x2)" },
     { value: "col-span-2 row-span-2", label: "Large (2x2)" },
   ]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -91,9 +178,10 @@ export function GalleryManager() {
           </div>
           <button
             onClick={handleAdd}
-            className="px-4 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:bg-accent/90 transition-colors"
+            disabled={saving}
+            className="px-4 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:bg-accent/90 transition-colors disabled:opacity-50"
           >
-            Add Photo
+            {saving ? "Adding..." : "Add Photo"}
           </button>
         </div>
       )}

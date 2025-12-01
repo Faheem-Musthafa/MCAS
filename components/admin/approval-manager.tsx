@@ -2,47 +2,95 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { CheckCircle2, XCircle, Clock, User, Calendar, Trophy, AlertCircle, ChevronDown, ChevronUp } from "lucide-react"
-import { initialScores, initialEvents, initialTeams, initialJudges, type Score } from "@/lib/data"
+import { CheckCircle2, XCircle, Clock, User, Calendar, Trophy, AlertCircle, ChevronDown, ChevronUp, Loader2 } from "lucide-react"
+import type { DbEvent, DbTeam, DbJudge, DbScore, DbJudgeScore } from "@/lib/supabase/types"
+
+interface ScoreWithJudgeScores extends DbScore {
+  judge_scores: DbJudgeScore[]
+}
 
 export function ApprovalManager() {
-  const [scores, setScores] = useState<Score[]>(initialScores)
-  const [events] = useState(initialEvents)
-  const [teams] = useState(initialTeams)
-  const [judges] = useState(initialJudges)
+  const [scores, setScores] = useState<ScoreWithJudgeScores[]>([])
+  const [events, setEvents] = useState<DbEvent[]>([])
+  const [teams, setTeams] = useState<DbTeam[]>([])
+  const [judges, setJudges] = useState<DbJudge[]>([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending")
-  const [expandedScore, setExpandedScore] = useState<number | null>(null)
-  const [processing, setProcessing] = useState<number | null>(null)
+  const [expandedScore, setExpandedScore] = useState<string | null>(null)
+  const [processing, setProcessing] = useState<string | null>(null)
 
   useEffect(() => {
-    const savedScores = localStorage.getItem("mcas-scores")
-    if (savedScores) setScores(JSON.parse(savedScores))
+    fetchData()
   }, [])
 
-  const handleApprove = (scoreId: number) => {
-    setProcessing(scoreId)
-    setTimeout(() => {
-      const newScores = scores.map((s) => (s.id === scoreId ? { ...s, status: "approved" as const } : s))
-      setScores(newScores)
-      localStorage.setItem("mcas-scores", JSON.stringify(newScores))
-      setProcessing(null)
-    }, 800)
+  async function fetchData() {
+    try {
+      const [scoresRes, eventsRes, teamsRes, judgesRes] = await Promise.all([
+        fetch("/api/scores"),
+        fetch("/api/events"),
+        fetch("/api/teams"),
+        fetch("/api/judges"),
+      ])
+      if (scoresRes.ok) setScores(await scoresRes.json())
+      if (eventsRes.ok) setEvents(await eventsRes.json())
+      if (teamsRes.ok) setTeams(await teamsRes.json())
+      if (judgesRes.ok) setJudges(await judgesRes.json())
+    } catch (error) {
+      console.error("Failed to fetch data:", error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleReject = (scoreId: number) => {
+  const handleApprove = async (scoreId: string) => {
     setProcessing(scoreId)
-    setTimeout(() => {
-      const newScores = scores.map((s) => (s.id === scoreId ? { ...s, status: "rejected" as const } : s))
-      setScores(newScores)
-      localStorage.setItem("mcas-scores", JSON.stringify(newScores))
+    try {
+      const res = await fetch(`/api/scores/${scoreId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "approved" }),
+      })
+      if (res.ok) {
+        setScores(scores.map((s) => (s.id === scoreId ? { ...s, status: "approved" as const } : s)))
+      }
+    } catch (error) {
+      console.error("Failed to approve score:", error)
+    } finally {
       setProcessing(null)
-    }, 800)
+    }
   }
 
-  const handleBulkApprove = () => {
-    const newScores = scores.map((s) => (s.status === "pending" ? { ...s, status: "approved" as const } : s))
-    setScores(newScores)
-    localStorage.setItem("mcas-scores", JSON.stringify(newScores))
+  const handleReject = async (scoreId: string) => {
+    setProcessing(scoreId)
+    try {
+      const res = await fetch(`/api/scores/${scoreId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "rejected" }),
+      })
+      if (res.ok) {
+        setScores(scores.map((s) => (s.id === scoreId ? { ...s, status: "rejected" as const } : s)))
+      }
+    } catch (error) {
+      console.error("Failed to reject score:", error)
+    } finally {
+      setProcessing(null)
+    }
+  }
+
+  const handleBulkApprove = async () => {
+    const pendingScores = scores.filter((s) => s.status === "pending")
+    for (const score of pendingScores) {
+      await handleApprove(score.id)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    )
   }
 
   const filteredScores = scores.filter((s) => (filter === "all" ? true : s.status === filter))
@@ -122,9 +170,9 @@ export function ApprovalManager() {
           </div>
         ) : (
           filteredScores.map((score) => {
-            const event = events.find((e) => e.id === score.eventId)
-            const team = teams.find((t) => t.id === score.teamId)
-            const submitter = judges.find((j) => j.id === score.submittedBy)
+            const event = events.find((e) => e.id === score.event_id)
+            const team = teams.find((t) => t.id === score.team_id)
+            const submitter = judges.find((j) => j.id === score.submitted_by)
             const isExpanded = expandedScore === score.id
 
             return (
@@ -171,18 +219,18 @@ export function ApprovalManager() {
                       </span>
                       <span className="flex items-center gap-1">
                         <User size={12} />
-                        {submitter?.name}
+                        {submitter?.name || "Unknown"}
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar size={12} />
-                        {new Date(score.submittedAt).toLocaleDateString()}
+                        {new Date(score.submitted_at).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
 
                   {/* Score */}
                   <div className="text-right shrink-0">
-                    <p className="text-2xl font-bold text-accent">{score.totalScore}</p>
+                    <p className="text-2xl font-bold text-accent">{score.total_score}</p>
                     <p className="text-xs text-muted-foreground">Total Points</p>
                   </div>
 
@@ -204,8 +252,8 @@ export function ApprovalManager() {
                       <div>
                         <p className="text-sm font-medium mb-3">Score Breakdown</p>
                         <div className="grid gap-2">
-                          {score.judgeScores.map((js, idx) => {
-                            const judge = judges.find((j) => j.id === js.judgeId)
+                          {score.judge_scores?.map((js, idx) => {
+                            const judge = judges.find((j) => j.id === js.judge_id)
                             return (
                               <div key={idx} className="flex items-center justify-between p-3 bg-background rounded-xl">
                                 <div className="flex items-center gap-3">

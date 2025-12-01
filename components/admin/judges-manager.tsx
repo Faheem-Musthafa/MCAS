@@ -1,44 +1,115 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Plus, Pencil, Trash2, Save, X, Award } from "lucide-react"
-import { initialJudges, type Judge } from "@/lib/data"
+import { Plus, Pencil, Trash2, Save, X, Award, Loader2, Copy, Check } from "lucide-react"
+import type { DbJudge } from "@/lib/supabase/types"
 
 export function JudgesManager() {
-  const [judges, setJudges] = useState<Judge[]>(initialJudges)
-  const [editingId, setEditingId] = useState<number | null>(null)
+  const [judges, setJudges] = useState<DbJudge[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [isAdding, setIsAdding] = useState(false)
-  const [newJudge, setNewJudge] = useState<Partial<Judge>>({ name: "", expertise: "", image: "" })
-  const [editJudge, setEditJudge] = useState<Judge | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [newJudge, setNewJudge] = useState<Partial<DbJudge>>({ name: "", expertise: "", image: "" })
+  const [editJudge, setEditJudge] = useState<DbJudge | null>(null)
 
-  const handleAdd = () => {
-    if (!newJudge.name || !newJudge.expertise) return
-    const judge: Judge = {
-      id: Date.now(),
-      name: newJudge.name,
-      expertise: newJudge.expertise,
-      image: newJudge.image || "/professional-judge-portrait.jpg",
+  useEffect(() => {
+    fetchJudges()
+  }, [])
+
+  async function fetchJudges() {
+    try {
+      const res = await fetch("/api/judges")
+      if (res.ok) {
+        setJudges(await res.json())
+      }
+    } catch (error) {
+      console.error("Failed to fetch judges:", error)
+    } finally {
+      setLoading(false)
     }
-    setJudges([...judges, judge])
-    setNewJudge({ name: "", expertise: "", image: "" })
-    setIsAdding(false)
   }
 
-  const handleEdit = (judge: Judge) => {
+  const handleAdd = async () => {
+    if (!newJudge.name || !newJudge.expertise) return
+    setSaving(true)
+    try {
+      const res = await fetch("/api/judges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newJudge.name,
+          expertise: newJudge.expertise,
+          image: newJudge.image || "/professional-judge-portrait.jpg",
+          access_code: `JUDGE${Date.now().toString().slice(-6)}`,
+        }),
+      })
+      if (res.ok) {
+        const created = await res.json()
+        setJudges([...judges, created])
+        setNewJudge({ name: "", expertise: "", image: "" })
+        setIsAdding(false)
+      }
+    } catch (error) {
+      console.error("Failed to create judge:", error)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleEdit = (judge: DbJudge) => {
     setEditingId(judge.id)
     setEditJudge({ ...judge })
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editJudge) return
-    setJudges(judges.map((j) => (j.id === editJudge.id ? editJudge : j)))
-    setEditingId(null)
-    setEditJudge(null)
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/judges/${editJudge.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editJudge),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setJudges(judges.map((j) => (j.id === editJudge.id ? updated : j)))
+        setEditingId(null)
+        setEditJudge(null)
+      }
+    } catch (error) {
+      console.error("Failed to update judge:", error)
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const handleDelete = (id: number) => {
-    setJudges(judges.filter((j) => j.id !== id))
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this judge?")) return
+    try {
+      const res = await fetch(`/api/judges/${id}`, { method: "DELETE" })
+      if (res.ok) {
+        setJudges(judges.filter((j) => j.id !== id))
+      }
+    } catch (error) {
+      console.error("Failed to delete judge:", error)
+    }
+  }
+
+  const copyAccessCode = (code: string, id: string) => {
+    navigator.clipboard.writeText(code)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    )
   }
 
   return (
@@ -99,10 +170,11 @@ export function JudgesManager() {
             </button>
             <button
               onClick={handleAdd}
-              className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium"
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium disabled:opacity-50"
             >
               <Save size={16} />
-              Save Judge
+              {saving ? "Saving..." : "Save Judge"}
             </button>
           </div>
         </div>
@@ -134,7 +206,7 @@ export function JudgesManager() {
                   />
                   <input
                     type="text"
-                    value={editJudge.image}
+                    value={editJudge.image || ""}
                     onChange={(e) => setEditJudge({ ...editJudge, image: e.target.value })}
                     className="w-full p-2 bg-secondary rounded-lg border border-border text-sm"
                     placeholder="Image URL"
@@ -149,7 +221,7 @@ export function JudgesManager() {
                     >
                       <X size={16} />
                     </button>
-                    <button onClick={handleSave} className="p-2 text-accent hover:text-accent/80">
+                    <button onClick={handleSave} disabled={saving} className="p-2 text-accent hover:text-accent/80 disabled:opacity-50">
                       <Save size={16} />
                     </button>
                   </div>
@@ -170,6 +242,20 @@ export function JudgesManager() {
                         <Award size={12} />
                         {judge.expertise}
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Access Code Section */}
+                  <div className="mb-4 p-3 bg-secondary/50 rounded-lg">
+                    <p className="text-xs text-muted-foreground mb-1">Access Code</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 text-sm font-mono">{judge.access_code}</code>
+                      <button
+                        onClick={() => copyAccessCode(judge.access_code, judge.id)}
+                        className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {copiedId === judge.id ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+                      </button>
                     </div>
                   </div>
 

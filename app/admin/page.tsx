@@ -1,29 +1,78 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { LayoutDashboard, Calendar, Trophy, ImageIcon, Gavel, ArrowLeft, Menu, X, ClipboardCheck } from "lucide-react"
+import { LayoutDashboard, Calendar, ImageIcon, Gavel, ArrowLeft, Menu, X, Users, Award, Loader2, LogOut } from "lucide-react"
 import { EventsManager } from "@/components/admin/events-manager"
-import { ScoresManager } from "@/components/admin/scores-manager"
 import { JudgesManager } from "@/components/admin/judges-manager"
 import { GalleryManager } from "@/components/admin/gallery-manager"
 import { DashboardOverview } from "@/components/admin/dashboard-overview"
-import { ApprovalManager } from "@/components/admin/approval-manager"
+import { TeamsManager } from "@/components/admin/teams-manager"
+import { ResultsManager } from "@/components/admin/results-manager"
 
-type Tab = "overview" | "events" | "scores" | "approvals" | "judges" | "gallery"
+type Tab = "overview" | "events" | "teams" | "results" | "judges" | "gallery"
 
 export default function AdminPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>("overview")
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    checkAuth()
+  }, [])
+
+  async function checkAuth() {
+    try {
+      const res = await fetch("/api/admin/check")
+      if (res.ok) {
+        setIsAuthenticated(true)
+      } else {
+        router.push("/admin/login")
+      }
+    } catch (error) {
+      router.push("/admin/login")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" })
+      router.push("/admin/login")
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
+  }
 
   const tabs = [
-    { id: "overview" as Tab, label: "Overview", icon: LayoutDashboard },
+    { id: "overview" as Tab, label: "Dashboard", icon: LayoutDashboard },
     { id: "events" as Tab, label: "Events", icon: Calendar },
-    { id: "scores" as Tab, label: "Scoreboard", icon: Trophy },
-    { id: "approvals" as Tab, label: "Approvals", icon: ClipboardCheck },
+    { id: "teams" as Tab, label: "Teams", icon: Users },
+    { id: "results" as Tab, label: "Results", icon: Award },
     { id: "judges" as Tab, label: "Judges", icon: Gavel },
     { id: "gallery" as Tab, label: "Gallery", icon: ImageIcon },
   ]
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-accent mx-auto" />
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If not authenticated, don't render anything (will redirect)
+  if (!isAuthenticated) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -74,15 +123,22 @@ export default function AdminPage() {
             ))}
           </nav>
 
-          {/* Back to Site */}
-          <div className="p-4 border-t border-border">
+          {/* Back to Site & Logout */}
+          <div className="p-4 border-t border-border space-y-1">
             <Link
               href="/"
-              className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary"
             >
               <ArrowLeft size={18} />
               Back to Website
             </Link>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2 px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors rounded-lg"
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
           </div>
         </div>
       </aside>
@@ -104,12 +160,12 @@ export default function AdminPage() {
           </div>
         </header>
 
-        {/* Content - Added ApprovalManager render */}
+        {/* Content */}
         <div className="p-6">
           {activeTab === "overview" && <DashboardOverview />}
           {activeTab === "events" && <EventsManager />}
-          {activeTab === "scores" && <ScoresManager />}
-          {activeTab === "approvals" && <ApprovalManager />}
+          {activeTab === "teams" && <TeamsManager />}
+          {activeTab === "results" && <ResultsManager />}
           {activeTab === "judges" && <JudgesManager />}
           {activeTab === "gallery" && <GalleryManager />}
         </div>

@@ -1,50 +1,64 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
-import { X, ChevronRight } from "lucide-react"
+import { X, ChevronRight, Loader2 } from "lucide-react"
+import type { DbGalleryItem } from "@/lib/supabase/types"
 
-const galleryImages = [
-  {
-    id: 1,
-    src: "/art-exhibition-opening-night-crowd.jpg",
-    title: "Opening Ceremony",
-    span: "col-span-2 row-span-2",
-  },
-  {
-    id: 2,
-    src: "/basketball-action.png",
-    title: "Basketball Finals",
-    span: "col-span-1 row-span-1",
-  },
-  {
-    id: 3,
-    src: "/dance-performance-stage.png",
-    title: "Dance Competition",
-    span: "col-span-1 row-span-1",
-  },
-  {
-    id: 4,
-    src: "/painting-artwork-gallery.jpg",
-    title: "Art Gallery",
-    span: "col-span-1 row-span-1",
-  },
-  {
-    id: 5,
-    src: "/football-match-celebration.jpg",
-    title: "Football Victory",
-    span: "col-span-2 row-span-1",
-  },
-  {
-    id: 6,
-    src: "/vibrant-concert-stage.png",
-    title: "Live Concert",
-    span: "col-span-1 row-span-1",
-  },
+interface GalleryImage {
+  id: string
+  src: string
+  title: string
+  span: string
+}
+
+// Default span values for layout
+const spanPatterns = [
+  "col-span-2 row-span-2",
+  "col-span-1 row-span-1",
+  "col-span-1 row-span-1",
+  "col-span-1 row-span-1",
+  "col-span-2 row-span-1",
+  "col-span-1 row-span-1",
 ]
 
 export function GallerySection() {
-  const [selectedImage, setSelectedImage] = useState<(typeof galleryImages)[0] | null>(null)
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([])
+  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchGallery() {
+      try {
+        const res = await fetch("/api/gallery")
+        if (res.ok) {
+          const data: DbGalleryItem[] = await res.json()
+          const images = data.map((item, index) => ({
+            id: item.id,
+            src: item.src,
+            title: item.title,
+            span: spanPatterns[index % spanPatterns.length],
+          }))
+          setGalleryImages(images)
+        }
+      } catch (error) {
+        console.error("Failed to fetch gallery:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchGallery()
+  }, [])
+
+  if (loading) {
+    return (
+      <section id="gallery" className="py-24 px-6">
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="w-12 h-12 animate-spin text-accent" />
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section id="gallery" className="py-24 px-6">

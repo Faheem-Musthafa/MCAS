@@ -53,27 +53,15 @@ export function Navigation() {
             </Link>
           </div>
 
-          {/* Right Nav - Added Judge Panel link */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link
-              href="/judge"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
-            >
-              Judge Panel
-            </Link>
-            <Link
-              href="/admin"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
-            >
-              Admin
-            </Link>
+          {/* Right Nav */}
+          {/* <div className="hidden md:flex items-center gap-6">
             <a
               href="#events"
               className="px-5 py-2.5 bg-foreground text-background text-sm font-medium rounded-full hover:bg-foreground/90 transition-colors"
             >
               Get Tickets
             </a>
-          </div>
+          </div> */}
 
           {/* Mobile Menu Button */}
           <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 text-foreground">
@@ -81,7 +69,7 @@ export function Navigation() {
           </button>
         </div>
 
-        {/* Mobile Menu - Added Judge Panel link */}
+        {/* Mobile Menu */}
         {mobileOpen && (
           <div className="md:hidden mt-4 pb-4 border-t border-border pt-4 flex flex-col gap-4">
             {navItems.map((item) => (
@@ -94,20 +82,6 @@ export function Navigation() {
                 {item.name}
               </a>
             ))}
-            <Link
-              href="/judge"
-              onClick={() => setMobileOpen(false)}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
-            >
-              Judge Panel
-            </Link>
-            <Link
-              href="/admin"
-              onClick={() => setMobileOpen(false)}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
-            >
-              Admin
-            </Link>
           </div>
         )}
       </div>
