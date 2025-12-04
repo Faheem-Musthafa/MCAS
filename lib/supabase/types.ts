@@ -1,5 +1,5 @@
 // Database types for Supabase
-// MCAS - MES College Arts & Sports Fest Management System
+// MCAS - Malabar College of Advanced Studies Arts & Sports Fest Management System
 
 export type CategoryType = "ART" | "SPORTS"
 export type ScoreStatus = "pending" | "approved" | "rejected"
@@ -236,12 +236,11 @@ export function getPointsForPosition(position: ResultPosition): number {
 // Festival config
 export const FEST_CONFIG = {
   name: "MCAS 2025",
-  fullName: "MES College Arts & Sports Fest",
+  fullName: "Malabar College of Advanced Studies Arts & Sports Fest",
   tagline: "Art moves the mind, sport moves the body",
-  college: "MES College",
+  college: "Malabar College of Advanced Studies",
   department: "Department of Computer Science",
   studentUnion: "11th Student Union",
-  dates: "December 15-20, 2025",
   location: "Main Campus",
   days: 6,
   startDate: new Date("2025-12-15"),

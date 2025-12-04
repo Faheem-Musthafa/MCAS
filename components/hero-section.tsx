@@ -1,179 +1,175 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowRight, Calendar, MapPin, Trophy } from "lucide-react"
+import Image from "next/image"
+import { ArrowRight, Trophy, Palette } from "lucide-react"
 import { FEST_CONFIG } from "@/lib/supabase/types"
 
 export function HeroSection() {
   const [mounted, setMounted] = useState(false)
-  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0 })
 
   useEffect(() => {
     setMounted(true)
-    
-    // Countdown to fest start date
-    const targetDate = new Date("2025-12-15T00:00:00")
-    
-    const updateCountdown = () => {
-      const now = new Date()
-      const diff = targetDate.getTime() - now.getTime()
-      
-      if (diff > 0) {
-        setCountdown({
-          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-        })
-      }
-    }
-    
-    updateCountdown()
-    const interval = setInterval(updateCountdown, 60000)
-    return () => clearInterval(interval)
   }, [])
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-20">
-      {/* Animated gradient orb in center */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative w-[600px] h-[600px]">
-          {/* Glowing orb */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-accent/20 via-transparent to-accent/10 blur-3xl animate-pulse-glow" />
-          {/* Inner metallic shape */}
-          <div className="absolute inset-20 flex items-center justify-center">
-            <svg viewBox="0 0 200 200" className="w-full h-full opacity-80">
-              <defs>
-                <linearGradient id="metalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
-                  <stop offset="50%" stopColor="#888888" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0.6" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M100 20 L180 100 L100 180 L20 100 Z"
-                fill="none"
-                stroke="url(#metalGradient)"
-                strokeWidth="2"
-                className="animate-float"
-              />
-              <circle cx="100" cy="100" r="60" fill="none" stroke="url(#metalGradient)" strokeWidth="1" opacity="0.5" />
-            </svg>
-          </div>
-        </div>
+    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-radial-pastel">
+      {/* Animated Blob Shapes */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="blob blob-pink absolute -top-32 -left-32 w-[400px] h-[400px] opacity-50" style={{ animationDelay: '0s' }} />
+        <div className="blob blob-blue absolute -top-20 -right-20 w-[350px] h-[350px] opacity-50" style={{ animationDelay: '2s' }} />
+        <div className="blob blob-purple absolute top-1/3 -left-20 w-[300px] h-[300px] opacity-40" style={{ animationDelay: '4s' }} />
+        <div className="blob blob-green absolute bottom-20 -right-32 w-[350px] h-[350px] opacity-40" style={{ animationDelay: '1s' }} />
+        <div className="blob blob-yellow absolute -bottom-20 left-1/4 w-[250px] h-[250px] opacity-40" style={{ animationDelay: '3s' }} />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-4 max-w-5xl mx-auto">
-        {/* Department Badge */}
-        <div
-          className={`transition-all duration-700 ease-out ${
-            mounted ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
-          }`}
-        >
-          <span className="inline-block px-6 py-2 glass text-xs tracking-[0.2em] uppercase rounded-full font-medium text-muted-foreground">
+      {/* Main Content */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 pt-28 pb-12">
+        
+        {/* Top Section - Logo and Title */}
+        <div className={`flex flex-col items-center text-center transition-all duration-700 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"}`}>
+          
+          {/* IBDA Union Logo */}
+          <div className="relative w-28 h-28 md:w-36 md:h-36 mb-6 animate-float-gentle">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[var(--art-pink)] to-[var(--art-purple)] blur-2xl opacity-50" />
+            <div className="relative w-full h-full rounded-full overflow-hidden bg-slate-800 shadow-xl">
+              <Image
+                src="/ibda.png"
+                alt="IBDA - Student Union"
+                fill
+                className="object-contain p-3"
+                priority
+              />
+            </div>
+          </div>
+
+          {/* Department Badge */}
+          <span className="inline-flex items-center gap-2 px-6 py-2.5 glass-card text-sm tracking-wide rounded-full font-medium text-[var(--art-text)] mb-4">
             {FEST_CONFIG.department} • {FEST_CONFIG.studentUnion}
           </span>
+
+          {/* Main Title */}
+          <h1 className={`transition-all duration-700 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`} style={{ transitionDelay: "200ms" }}>
+            <span className="block text-5xl md:text-7xl lg:text-8xl font-black tracking-tight gradient-text drop-shadow-sm">
+              MCAS 2025
+            </span>
+            <span className="block text-xl md:text-2xl lg:text-3xl font-light text-[var(--art-text-light)] mt-3">
+              {FEST_CONFIG.tagline}
+            </span>
+          </h1>
         </div>
 
-        {/* Main Title */}
-        <h1
-          className={`mt-10 text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-none transition-all duration-700 ease-out ${
-            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          }`}
-          style={{ transitionDelay: "200ms" }}
-        >
-          <span className="gradient-text">{FEST_CONFIG.name}</span>
-          <br />
-          <span className="text-foreground text-3xl md:text-4xl lg:text-5xl">{FEST_CONFIG.tagline}</span>
-        </h1>
+        {/* Event Cards Section - Sports & Arts */}
+        <div className={`mt-12 grid md:grid-cols-2 gap-6 lg:gap-10 max-w-5xl mx-auto transition-all duration-700 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`} style={{ transitionDelay: "300ms" }}>
+          
+          {/* Annual Sports Meet Card */}
+          <div className="group relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--art-green)] to-[var(--art-blue)] rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity" />
+            <div className="relative glass-card rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+              {/* Image */}
+              <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-teal-100 to-blue-100">
+                <Image
+                  src="/ANNUAL SPORTS MEET_20251203_101759_0000.png"
+                  alt="Annual Sports Meet 2025"
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                
+                {/* Badge */}
+                <div className="absolute top-4 left-4 z-10">
+                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold shadow-lg" style={{ background: 'rgba(212, 240, 240, 0.95)', color: '#0d9488' }}>
+                    <Trophy size={16} />
+                    SPORTS
+                  </span>
+                </div>
+              </div>
 
-        {/* Countdown */}
-        {countdown.days > 0 && (
-          <div
-            className={`mt-8 flex items-center gap-4 transition-all duration-700 ease-out ${
-              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-            }`}
-            style={{ transitionDelay: "300ms" }}
-          >
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-accent">{countdown.days}</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Days</div>
-            </div>
-            <span className="text-2xl text-muted-foreground">:</span>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold">{countdown.hours}</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Hours</div>
-            </div>
-            <span className="text-2xl text-muted-foreground">:</span>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold">{countdown.minutes}</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Mins</div>
+              {/* Info Footer */}
+              <div className="p-5 bg-white/50">
+                <h3 className="text-xl font-bold text-[var(--art-text)] mb-1">Annual Sports Meet</h3>
+                <p className="text-sm text-[var(--art-text-light)] mb-4">Compete. Conquer. Celebrate.</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(212, 240, 240, 0.8)' }}>
+                      <Trophy size={20} className="text-teal-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[var(--art-text)]">Day 1 & 2</p>
+                      <p className="text-xs text-[var(--art-text-light)]">15 - 16 Dec 2025</p>
+                    </div>
+                  </div>
+                  <a href="#events" className="px-5 py-2.5 rounded-full text-sm font-semibold flex items-center gap-1 group/btn" style={{ background: 'rgba(212, 240, 240, 0.9)', color: '#0d9488' }}>
+                    View <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* Subtitle */}
-        <p
-          className={`mt-8 text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed transition-all duration-700 ease-out ${
-            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          }`}
-          style={{ transitionDelay: "400ms" }}
-        >
-          {FEST_CONFIG.fullName} – An extraordinary celebration of creativity, talent, and sportsmanship. 
-          Join us for {FEST_CONFIG.days} days of unforgettable experiences.
-        </p>
+          {/* Annual Arts Fest Card */}
+          <div className="group relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--art-pink)] to-[var(--art-purple)] rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity" />
+            <div className="relative glass-card rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+              {/* Image */}
+              <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-pink-100 to-purple-100">
+                <Image
+                  src="/ANNUAL SPORTS MEET_20251203_101045_0000.png"
+                  alt="Annual Arts Fest 2025"
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                
+                {/* Badge */}
+                <div className="absolute top-4 left-4 z-10">
+                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold shadow-lg" style={{ background: 'rgba(230, 206, 242, 0.95)', color: '#9333ea' }}>
+                    <Palette size={16} />
+                    ARTS
+                  </span>
+                </div>
+              </div>
 
-        {/* Event Info Bar */}
-        <div
-          className={`mt-12 flex flex-wrap items-center justify-center gap-8 text-sm transition-all duration-700 ease-out ${
-            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          }`}
-          style={{ transitionDelay: "600ms" }}
-        >
-          <div className="flex items-center gap-2">
-            <MapPin size={16} className="text-accent" />
-            <div className="flex flex-col">
-              <span className="text-muted-foreground uppercase tracking-wider text-xs">Location</span>
-              <span className="font-medium">{FEST_CONFIG.college}</span>
-            </div>
-          </div>
-          <div className="w-px h-8 bg-border hidden sm:block" />
-          <div className="flex items-center gap-2">
-            <Calendar size={16} className="text-accent" />
-            <div className="flex flex-col">
-              <span className="text-muted-foreground uppercase tracking-wider text-xs">Date</span>
-              <span className="font-medium">{FEST_CONFIG.dates}</span>
-            </div>
-          </div>
-          <div className="w-px h-8 bg-border hidden sm:block" />
-          <div className="flex items-center gap-2">
-            <Trophy size={16} className="text-accent" />
-            <div className="flex flex-col">
-              <span className="text-muted-foreground uppercase tracking-wider text-xs">Events</span>
-              <span className="font-medium text-accent">{FEST_CONFIG.days} Days of Action</span>
+              {/* Info Footer */}
+              <div className="p-5 bg-white/50">
+                <h3 className="text-xl font-bold text-[var(--art-text)] mb-1">Annual Arts Fest</h3>
+                <p className="text-sm text-[var(--art-text-light)] mb-4">Create. Express. Inspire.</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(230, 206, 242, 0.8)' }}>
+                      <Palette size={20} className="text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[var(--art-text)]">Day 3 & 4</p>
+                      <p className="text-xs text-[var(--art-text-light)]">17 - 18 Dec 2025</p>
+                    </div>
+                  </div>
+                  <a href="#events" className="px-5 py-2.5 rounded-full text-sm font-semibold flex items-center gap-1 group/btn" style={{ background: 'rgba(255, 209, 220, 0.9)', color: '#db2777' }}>
+                    View <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* CTA Button */}
-        <div
-          className={`mt-10 transition-all duration-700 ease-out ${
-            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          }`}
-          style={{ transitionDelay: "800ms" }}
-        >
-          <a
-            href="#events"
-            className="group inline-flex items-center gap-2 px-8 py-4 bg-foreground text-background rounded-full font-medium transition-all duration-300 hover:bg-foreground/90 hover:gap-4"
-          >
-            View Schedule
-            <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+        {/* CTA Buttons */}
+        <div className={`mt-12 flex flex-wrap gap-4 justify-center transition-all duration-700 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`} style={{ transitionDelay: "400ms" }}>
+          <a href="#events" className="group inline-flex items-center gap-2 px-8 py-4 btn-pastel-pink rounded-full font-semibold text-lg transition-all duration-300 hover:gap-4 hover:shadow-xl">
+            🎨 Explore All Events
+            <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
+          </a>
+          <a href="#scoreboard" className="group inline-flex items-center gap-2 px-8 py-4 btn-pastel-blue rounded-full font-semibold text-lg transition-all duration-300 hover:gap-4 hover:shadow-xl">
+            🏆 Live Scoreboard
+            <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
           </a>
         </div>
       </div>
 
-      {/* Bottom gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
+      {/* Scroll indicator */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce">
+        <div className="w-6 h-10 rounded-full border-2 border-[var(--art-text-light)]/50 flex items-start justify-center p-2">
+          <div className="w-1.5 h-3 rounded-full bg-[var(--art-accent)] animate-pulse" />
+        </div>
+      </div>
     </section>
   )
 }
