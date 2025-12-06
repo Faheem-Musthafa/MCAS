@@ -1,31 +1,26 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
-import { Pencil, Trash2, X, Check, Loader2, Users, Trophy, Medal } from "lucide-react"
+import { Pencil, Trash2, X, Check, Loader2, Users, Trophy, Medal, Search, ArrowUpDown, RefreshCw } from "lucide-react"
 import type { DbTeam } from "@/lib/supabase/types"
+import { FEST_CONFIG } from "@/lib/supabase/types"
 
-// Common college departments
-const DEPARTMENTS = [
-  "Computer Science",
-  "Electronics",
-  "Mechanical",
-  "Civil",
-  "Electrical",
-  "Information Technology",
-  "Commerce",
-  "Management",
-  "Arts",
-  "Science",
-]
+type SortField = "rank" | "name" | "points"
+type SortOrder = "asc" | "desc"
 
 export function TeamsManager() {
   const [teams, setTeams] = useState<DbTeam[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<DbTeam>>({})
   const [showAddForm, setShowAddForm] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sortField, setSortField] = useState<SortField>("rank")
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc")
+  
   const [newTeam, setNewTeam] = useState<Partial<DbTeam>>({
     name: "",
     short_name: "",
@@ -46,12 +41,9 @@ export function TeamsManager() {
       reader.readAsDataURL(file)
     })
 
-  useEffect(() => {
-    fetchTeams()
-  }, [])
-
-  async function fetchTeams() {
+  const fetchTeams = useCallback(async (isRefresh = false) => {
     try {
+      if (isRefresh) setRefreshing(true)
       const res = await fetch("/api/teams")
       if (res.ok) {
         setTeams(await res.json())
@@ -60,8 +52,16 @@ export function TeamsManager() {
       console.error("Failed to fetch teams:", error)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchTeams()
+    // Auto-refresh for real-time updates
+    const interval = setInterval(() => fetchTeams(true), FEST_CONFIG.refreshInterval)
+    return () => clearInterval(interval)
+  }, [fetchTeams])
 
   const handleEdit = (team: DbTeam) => {
     setEditingId(team.id)
@@ -72,10 +72,13 @@ export function TeamsManager() {
     if (editingId && editForm) {
       setSaving(true)
       try {
+        // Exclude points/stats from update to prevent overwriting live data
+        const { total_points, gold, silver, bronze, ...updateData } = editForm
+        
         const res = await fetch(`/api/teams/${editingId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(editForm),
+          body: JSON.stringify(updateData),
         })
         if (res.ok) {
           const updated = await res.json()
@@ -142,6 +145,15 @@ export function TeamsManager() {
     return dept.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 4)
   }
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortOrder("asc")
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -150,21 +162,60 @@ export function TeamsManager() {
     )
   }
 
-  // Sort teams by total points for ranking
-  const rankedTeams = [...teams].sort((a, b) => b.total_points - a.total_points)
+  // Filter and Sort
+  const filteredTeams = teams.filter(t => 
+    t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    t.department.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  // Calculate rank first based on points
+  const rankedTeams = [...filteredTeams].sort((a, b) => b.total_points - a.total_points)
+  
+  // Then apply display sort if needed, but usually we want rank order
+  const displayTeams = [...rankedTeams].sort((a, b) => {
+    if (sortField === "name") {
+      return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+    }
+    if (sortField === "points") {
+      return sortOrder === "asc" ? a.total_points - b.total_points : b.total_points - a.total_points
+    }
+    // Default rank sort (already sorted by points desc)
+    return sortOrder === "asc" ? 0 : -1 // If desc rank, reverse
+  })
+
+  if (sortField === "rank" && sortOrder === "desc") {
+    displayTeams.reverse()
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="px-4 py-2 bg-foreground text-background rounded-lg text-sm font-medium hover:bg-foreground/90 transition-colors"
-        >
-          {showAddForm ? "Cancel" : "Add Department Team"}
-        </button>
-        <div className="text-sm text-muted-foreground">
-          {teams.length} teams registered
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+          <input
+            type="text"
+            placeholder="Search teams..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-secondary rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-accent text-sm"
+          />
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => fetchTeams(true)}
+            disabled={refreshing}
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+            title="Refresh teams"
+          >
+            <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
+          </button>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="flex-1 sm:flex-none px-4 py-2 bg-foreground text-background rounded-lg text-sm font-medium hover:bg-foreground/90 transition-colors"
+          >
+            {showAddForm ? "Cancel" : "Add Department Team"}
+          </button>
         </div>
       </div>
 
@@ -196,7 +247,7 @@ export function TeamsManager() {
               className="px-4 py-2 bg-secondary rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-accent"
             >
               <option value="">Select Department *</option>
-              {DEPARTMENTS.map((dept) => (
+              {FEST_CONFIG.departments.map((dept) => (
                 <option key={dept} value={dept}>{dept}</option>
               ))}
             </select>
@@ -269,23 +320,38 @@ export function TeamsManager() {
           <table className="w-full">
             <thead className="bg-secondary">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-16">
-                  Rank
+                <th 
+                  className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-16 cursor-pointer hover:text-foreground"
+                  onClick={() => handleSort("rank")}
+                >
+                  <div className="flex items-center gap-1">
+                    Rank <ArrowUpDown size={12} />
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Team
+                <th 
+                  className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground"
+                  onClick={() => handleSort("name")}
+                >
+                  <div className="flex items-center gap-1">
+                    Team Name <ArrowUpDown size={12} />
+                  </div>
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  🥇
+                  1st
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  🥈
+                  2nd
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  🥉
+                  3rd
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Points
+                <th 
+                  className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground"
+                  onClick={() => handleSort("points")}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    Total Points <ArrowUpDown size={12} />
+                  </div>
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Actions
@@ -293,8 +359,9 @@ export function TeamsManager() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {rankedTeams.map((team, index) => {
-                const rank = index + 1
+              {displayTeams.map((team) => {
+                // Find actual rank from the full sorted list
+                const rank = teams.sort((a, b) => b.total_points - a.total_points).findIndex(t => t.id === team.id) + 1
                 const isEditing = editingId === team.id
 
                 return (
@@ -453,10 +520,9 @@ export function TeamsManager() {
           Points System
         </h4>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-          <span>🥇 1st Place: <strong className="text-foreground">10 pts</strong></span>
-          <span>🥈 2nd Place: <strong className="text-foreground">7 pts</strong></span>
-          <span>🥉 3rd Place: <strong className="text-foreground">5 pts</strong></span>
-          <span>Participation: <strong className="text-foreground">1 pt</strong></span>
+          <span>🥇 1st Place: <strong className="text-foreground">ART: {FEST_CONFIG.scoring.ART.group["1st"]}/{FEST_CONFIG.scoring.ART.individual["1st"]} • SPORTS: {FEST_CONFIG.scoring.SPORTS.group["1st"]}/{FEST_CONFIG.scoring.SPORTS.individual["1st"]}</strong></span>
+          <span>🥈 2nd Place: <strong className="text-foreground">ART: {FEST_CONFIG.scoring.ART.group["2nd"]}/{FEST_CONFIG.scoring.ART.individual["2nd"]} • SPORTS: {FEST_CONFIG.scoring.SPORTS.group["2nd"]}/{FEST_CONFIG.scoring.SPORTS.individual["2nd"]}</strong></span>
+          <span>🥉 3rd Place: <strong className="text-foreground">ART: {FEST_CONFIG.scoring.ART.group["3rd"]}/{FEST_CONFIG.scoring.ART.individual["3rd"]} • SPORTS: {FEST_CONFIG.scoring.SPORTS.group["3rd"]}/{FEST_CONFIG.scoring.SPORTS.individual["3rd"]}</strong></span>
         </div>
       </div>
     </div>

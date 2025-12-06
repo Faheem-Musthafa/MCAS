@@ -6,9 +6,7 @@ export type {
   ScoreStatus,
   DbEvent,
   DbTeam,
-  DbJudge,
   DbScore,
-  DbJudgeScore,
   DbGalleryItem,
   DbScoringCriteria,
 } from "./types"

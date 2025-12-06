@@ -25,19 +25,9 @@ export type Score = {
   id: number
   eventId: number
   teamId: number
-  judgeScores: { judgeId: number; score: number; criteria: string }[]
   totalScore: number
   status: "pending" | "approved" | "rejected"
   submittedAt: string
-  submittedBy: number // judgeId
-}
-
-export type Judge = {
-  id: number
-  name: string
-  expertise: string
-  image: string
-  accessCode: string // Added access code for judge login
 }
 
 export type GalleryItem = {
@@ -162,124 +152,54 @@ export const initialTeams: Team[] = [
   },
 ]
 
-export const initialJudges: Judge[] = [
-  {
-    id: 1,
-    name: "Dr. Amanda Wright",
-    expertise: "Fine Arts",
-    image: "/professional-woman-judge-portrait.jpg",
-    accessCode: "JUDGE001",
-  },
-  {
-    id: 2,
-    name: "Prof. Michael Chen",
-    expertise: "Sports Analytics",
-    image: "/professional-asian-man-judge-portrait.jpg",
-    accessCode: "JUDGE002",
-  },
-  {
-    id: 3,
-    name: "Sarah Martinez",
-    expertise: "Performance Arts",
-    image: "/professional-latina-woman-judge-portrait.jpg",
-    accessCode: "JUDGE003",
-  },
-  {
-    id: 4,
-    name: "James O'Connor",
-    expertise: "Athletics",
-    image: "/professional-man-sports-judge-portrait.jpg",
-    accessCode: "JUDGE004",
-  },
-  {
-    id: 5,
-    name: "Dr. Priya Sharma",
-    expertise: "Music & Dance",
-    image: "/professional-indian-woman-judge-portrait.jpg",
-    accessCode: "JUDGE005",
-  },
-]
-
 export const initialScores: Score[] = [
   {
     id: 1,
     eventId: 1,
     teamId: 3,
-    judgeScores: [
-      { judgeId: 1, score: 92, criteria: "Creativity" },
-      { judgeId: 3, score: 88, criteria: "Technique" },
-      { judgeId: 5, score: 90, criteria: "Presentation" },
-    ],
     totalScore: 270,
     status: "approved",
     submittedAt: "2024-12-10T10:30:00Z",
-    submittedBy: 1,
   },
   {
     id: 2,
     eventId: 1,
     teamId: 4,
-    judgeScores: [
-      { judgeId: 1, score: 85, criteria: "Creativity" },
-      { judgeId: 3, score: 91, criteria: "Technique" },
-      { judgeId: 5, score: 87, criteria: "Presentation" },
-    ],
     totalScore: 263,
     status: "approved",
     submittedAt: "2024-12-10T11:00:00Z",
-    submittedBy: 1,
   },
   {
     id: 3,
     eventId: 2,
     teamId: 1,
-    judgeScores: [
-      { judgeId: 2, score: 45, criteria: "Performance" },
-      { judgeId: 4, score: 38, criteria: "Teamwork" },
-    ],
     totalScore: 83,
     status: "approved",
     submittedAt: "2024-12-11T14:00:00Z",
-    submittedBy: 2,
   },
   {
     id: 4,
     eventId: 2,
     teamId: 2,
-    judgeScores: [
-      { judgeId: 2, score: 42, criteria: "Performance" },
-      { judgeId: 4, score: 40, criteria: "Teamwork" },
-    ],
     totalScore: 82,
     status: "pending",
     submittedAt: "2024-12-11T14:30:00Z",
-    submittedBy: 2,
   },
   {
     id: 5,
     eventId: 4,
     teamId: 1,
-    judgeScores: [
-      { judgeId: 2, score: 78, criteria: "Performance" },
-      { judgeId: 4, score: 82, criteria: "Sportsmanship" },
-    ],
     totalScore: 160,
     status: "pending",
     submittedAt: "2024-12-12T09:00:00Z",
-    submittedBy: 4,
   },
   {
     id: 6,
     eventId: 4,
     teamId: 5,
-    judgeScores: [
-      { judgeId: 2, score: 72, criteria: "Performance" },
-      { judgeId: 4, score: 75, criteria: "Sportsmanship" },
-    ],
     totalScore: 147,
     status: "approved",
     submittedAt: "2024-12-12T09:30:00Z",
-    submittedBy: 4,
   },
 ]
 

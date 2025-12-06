@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
-import { Pencil, Trash2, X, Check, GripVertical, Loader2 } from "lucide-react"
+import { Pencil, Trash2, X, Check, GripVertical, Loader2, Video, Image as ImageIcon, RefreshCw } from "lucide-react"
 import type { DbGalleryItem } from "@/lib/supabase/types"
+import { FEST_CONFIG } from "@/lib/supabase/types"
 
 interface GalleryItemWithSpan extends DbGalleryItem {
   span: string
@@ -12,13 +13,14 @@ interface GalleryItemWithSpan extends DbGalleryItem {
 export function GalleryManager() {
   const [gallery, setGallery] = useState<GalleryItemWithSpan[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<GalleryItemWithSpan>>({})
   const [showAddForm, setShowAddForm] = useState(false)
   const [newItem, setNewItem] = useState<Partial<GalleryItemWithSpan>>({
     title: "",
-    src: "/placeholder.svg?height=400&width=600",
+    src: "",
     span: "col-span-1 row-span-1",
   })
 
@@ -31,18 +33,16 @@ export function GalleryManager() {
     "col-span-1 row-span-1",
   ]
 
-  useEffect(() => {
-    fetchGallery()
-  }, [])
-
-  async function fetchGallery() {
+  const fetchGallery = useCallback(async (isRefresh = false) => {
     try {
+      if (isRefresh) setRefreshing(true)
       const res = await fetch("/api/gallery")
       if (res.ok) {
         const data: DbGalleryItem[] = await res.json()
+        // Use stored span if available, otherwise assign pattern
         const withSpans = data.map((item, index) => ({
           ...item,
-          span: spanPatterns[index % spanPatterns.length],
+          span: item.span || spanPatterns[index % spanPatterns.length],
         }))
         setGallery(withSpans)
       }
@@ -50,8 +50,16 @@ export function GalleryManager() {
       console.error("Failed to fetch gallery:", error)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchGallery()
+    // Auto-refresh for real-time updates
+    const interval = setInterval(() => fetchGallery(true), FEST_CONFIG.refreshInterval)
+    return () => clearInterval(interval)
+  }, [fetchGallery])
 
   const handleEdit = (item: GalleryItemWithSpan) => {
     setEditingId(item.id)
@@ -98,7 +106,7 @@ export function GalleryManager() {
   }
 
   const handleAdd = async () => {
-    if (newItem.title) {
+    if (newItem.title && newItem.src) {
       setSaving(true)
       try {
         const res = await fetch("/api/gallery", {
@@ -114,7 +122,7 @@ export function GalleryManager() {
           setGallery([...gallery, { ...created, span: newItem.span || "col-span-1 row-span-1" }])
           setNewItem({
             title: "",
-            src: "/placeholder.svg?height=400&width=600",
+            src: "",
             span: "col-span-1 row-span-1",
           })
           setShowAddForm(false)
@@ -125,6 +133,18 @@ export function GalleryManager() {
         setSaving(false)
       }
     }
+  }
+
+  const fileToDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result))
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+
+  const isVideo = (src: string) => {
+    return src.match(/\.(mp4|webm|ogg)$/i) || src.startsWith("data:video")
   }
 
   const spanOptions = [
@@ -144,13 +164,25 @@ export function GalleryManager() {
 
   return (
     <div className="space-y-6">
-      {/* Add New Item Button */}
-      <button
-        onClick={() => setShowAddForm(!showAddForm)}
-        className="px-4 py-2 bg-foreground text-background rounded-lg text-sm font-medium hover:bg-foreground/90 transition-colors"
-      >
-        {showAddForm ? "Cancel" : "Add New Photo"}
-      </button>
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => fetchGallery(true)}
+            disabled={refreshing}
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+            title="Refresh gallery"
+          >
+            <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
+          </button>
+        </div>
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          className="px-4 py-2 bg-foreground text-background rounded-lg text-sm font-medium hover:bg-foreground/90 transition-colors"
+        >
+          {showAddForm ? "Cancel" : "Add New Media"}
+        </button>
+      </div>
 
       {/* Add Form */}
       {showAddForm && (
@@ -159,7 +191,7 @@ export function GalleryManager() {
           <div className="grid sm:grid-cols-2 gap-4">
             <input
               type="text"
-              placeholder="Photo Title"
+              placeholder="Title"
               value={newItem.title}
               onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
               className="px-4 py-2 bg-secondary rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-accent"
@@ -175,13 +207,46 @@ export function GalleryManager() {
                 </option>
               ))}
             </select>
+            <div className="sm:col-span-2 space-y-2">
+              <label className="text-sm font-medium">Upload Photo or Video</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Image/Video URL"
+                  value={newItem.src}
+                  onChange={(e) => setNewItem({ ...newItem, src: e.target.value })}
+                  className="flex-1 px-4 py-2 bg-secondary rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0]
+                      if (f) {
+                        try {
+                          const dataUrl = await fileToDataUrl(f)
+                          setNewItem({ ...newItem, src: dataUrl })
+                        } catch (err) {
+                          console.error("Failed to read file", err)
+                        }
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <button className="px-4 py-2 bg-secondary border border-border rounded-lg hover:bg-secondary/80">
+                    Upload
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
           <button
             onClick={handleAdd}
-            disabled={saving}
+            disabled={saving || !newItem.title || !newItem.src}
             className="px-4 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:bg-accent/90 transition-colors disabled:opacity-50"
           >
-            {saving ? "Adding..." : "Add Photo"}
+            {saving ? "Adding..." : "Add Media"}
           </button>
         </div>
       )}
@@ -190,7 +255,16 @@ export function GalleryManager() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[150px]">
         {gallery.map((item) => (
           <div key={item.id} className={`relative rounded-xl overflow-hidden bg-secondary group ${item.span}`}>
-            <Image src={item.src || "/placeholder.svg"} alt={item.title} fill className="object-cover" />
+            {isVideo(item.src) ? (
+              <video src={item.src} className="w-full h-full object-cover" controls={false} muted loop autoPlay />
+            ) : (
+              <Image src={item.src || "/placeholder.svg"} alt={item.title} fill className="object-cover" />
+            )}
+
+            {/* Type Indicator */}
+            <div className="absolute top-2 left-2 p-1 bg-black/50 rounded text-white">
+              {isVideo(item.src) ? <Video size={14} /> : <ImageIcon size={14} />}
+            </div>
 
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 p-4">

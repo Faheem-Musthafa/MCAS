@@ -5,9 +5,7 @@ import { createClient } from "./server"
 import type {
   DbEvent,
   DbTeam,
-  DbJudge,
   DbScore,
-  DbJudgeScore,
   DbGalleryItem,
   DbScoringCriteria,
   CategoryType,
@@ -197,101 +195,10 @@ export async function deleteTeam(id: string): Promise<void> {
 }
 
 // =============================================
-// JUDGES
-// =============================================
-
-export async function getJudges(): Promise<DbJudge[]> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("judges")
-    .select("*")
-    .order("name", { ascending: true })
-
-  if (error) throw error
-  return (data as DbJudge[]) || []
-}
-
-export async function getJudge(id: string): Promise<DbJudge | null> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("judges")
-    .select("*")
-    .eq("id", id)
-    .single()
-
-  if (error) {
-    if (error.code === "PGRST116") return null
-    throw error
-  }
-  return data as DbJudge
-}
-
-export async function getJudgeByAccessCode(accessCode: string): Promise<DbJudge | null> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("judges")
-    .select("*")
-    .eq("access_code", accessCode)
-    .single()
-
-  if (error) {
-    if (error.code === "PGRST116") return null
-    throw error
-  }
-  return data as DbJudge
-}
-
-export async function createJudge(judge: {
-  name: string
-  expertise: string
-  access_code: string
-  image?: string | null
-}): Promise<DbJudge> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("judges")
-    .insert(judge as any)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data as DbJudge
-}
-
-export async function updateJudge(
-  id: string,
-  judge: Partial<{
-    name: string
-    expertise: string
-    access_code: string
-    image: string | null
-  }>
-): Promise<DbJudge> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("judges")
-    .update(judge as any)
-    .eq("id", id)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data as DbJudge
-}
-
-export async function deleteJudge(id: string): Promise<void> {
-  const supabase = await createClient()
-  const { error } = await supabase.from("judges").delete().eq("id", id)
-
-  if (error) throw error
-}
-
-// =============================================
 // SCORES
 // =============================================
 
 export interface ScoreWithDetails extends DbScore {
-  judge_scores: DbJudgeScore[]
   event?: DbEvent
   team?: DbTeam
 }
@@ -302,7 +209,6 @@ export async function getScores(): Promise<ScoreWithDetails[]> {
     .from("scores")
     .select(`
       *,
-      judge_scores (*),
       event:events (*),
       team:teams (*)
     `)
@@ -318,7 +224,6 @@ export async function getScoresByStatus(status: ScoreStatus): Promise<ScoreWithD
     .from("scores")
     .select(`
       *,
-      judge_scores (*),
       event:events (*),
       team:teams (*)
     `)
@@ -335,7 +240,6 @@ export async function getScoresByEvent(eventId: string): Promise<ScoreWithDetail
     .from("scores")
     .select(`
       *,
-      judge_scores (*),
       team:teams (*)
     `)
     .eq("event_id", eventId)
@@ -351,7 +255,6 @@ export async function getScoresByTeam(teamId: string): Promise<ScoreWithDetails[
     .from("scores")
     .select(`
       *,
-      judge_scores (*),
       event:events (*)
     `)
     .eq("team_id", teamId)
@@ -364,16 +267,12 @@ export async function getScoresByTeam(teamId: string): Promise<ScoreWithDetails[
 export async function createScore(
   eventId: string,
   teamId: string,
-  judgeScores: { judgeId: string; score: number; criteria: string }[],
+  totalScore: number,
   submittedBy?: string
-): Promise<ScoreWithDetails> {
+): Promise<DbScore> {
   const supabase = await createClient()
 
-  // Calculate total score
-  const totalScore = judgeScores.reduce((sum, js) => sum + js.score, 0)
-
-  // Insert the score
-  const { data: scoreData, error: scoreError } = await supabase
+  const { data, error } = await supabase
     .from("scores")
     .insert({
       event_id: eventId,
@@ -385,29 +284,8 @@ export async function createScore(
     .select()
     .single()
 
-  if (scoreError) throw scoreError
-
-  const score = scoreData as DbScore
-
-  // Insert judge scores
-  const judgeScoreInserts = judgeScores.map((js) => ({
-    score_id: score.id,
-    judge_id: js.judgeId,
-    score: js.score,
-    criteria: js.criteria,
-  }))
-
-  const { data: judgeScoreData, error: judgeScoreError } = await supabase
-    .from("judge_scores")
-    .insert(judgeScoreInserts as any)
-    .select()
-
-  if (judgeScoreError) throw judgeScoreError
-
-  return {
-    ...score,
-    judge_scores: (judgeScoreData as DbJudgeScore[]) || [],
-  }
+  if (error) throw error
+  return data as DbScore
 }
 
 export async function updateScoreStatus(id: string, status: ScoreStatus): Promise<DbScore> {
@@ -447,7 +325,6 @@ export async function updateScore(
 
 export async function deleteScore(id: string): Promise<void> {
   const supabase = await createClient()
-  // Judge scores will be deleted automatically due to CASCADE
   const { error } = await supabase.from("scores").delete().eq("id", id)
 
   if (error) throw error
@@ -545,7 +422,6 @@ export async function getScoringCriteriaByCategory(category: CategoryType): Prom
 export interface DashboardStats {
   totalEvents: number
   totalTeams: number
-  totalJudges: number
   pendingScores: number
   approvedScores: number
 }
@@ -553,10 +429,9 @@ export interface DashboardStats {
 export async function getDashboardStats(): Promise<DashboardStats> {
   const supabase = await createClient()
 
-  const [eventsRes, teamsRes, judgesRes, pendingRes, approvedRes] = await Promise.all([
+  const [eventsRes, teamsRes, pendingRes, approvedRes] = await Promise.all([
     supabase.from("events").select("id", { count: "exact", head: true }),
     supabase.from("teams").select("id", { count: "exact", head: true }),
-    supabase.from("judges").select("id", { count: "exact", head: true }),
     supabase.from("scores").select("id", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("scores").select("id", { count: "exact", head: true }).eq("status", "approved"),
   ])
@@ -564,7 +439,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   return {
     totalEvents: eventsRes.count || 0,
     totalTeams: teamsRes.count || 0,
-    totalJudges: judgesRes.count || 0,
     pendingScores: pendingRes.count || 0,
     approvedScores: approvedRes.count || 0,
   }

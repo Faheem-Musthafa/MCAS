@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getPointsForPosition, type ResultPosition } from "@/lib/supabase/types"
+import { FEST_CONFIG, type ResultPosition, type CategoryType } from "@/lib/supabase/types"
+import { cookies } from "next/headers"
+
+// Calculate points based on position, event category, and event type
+function calculatePoints(position: ResultPosition, category: CategoryType, eventType: string): number {
+  const type = (eventType === "group" || eventType === "team") ? "group" : "individual"
+  const scoringConfig = FEST_CONFIG.scoring[category][type]
+  return scoringConfig[position as keyof typeof scoringConfig] || 0
+}
 
 export async function GET(request: Request) {
   try {
@@ -34,11 +42,32 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const cookieStore = await cookies()
+    const session = cookieStore.get("admin_session")
+    
+    if (!session?.value) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const supabase = createAdminClient()
     const body = await request.json()
 
     const position = body.position as ResultPosition
-    const points = getPointsForPosition(position)
+    
+    // Get event information to determine category and type
+    const { data: event } = await supabase
+      .from("events")
+      .select("category, event_type")
+      .eq("id", body.event_id)
+      .single()
+
+    // Calculate points based on event category and type
+    let points = body.points
+    if (event && points === undefined) {
+      points = calculatePoints(position, event.category, event.event_type)
+    } else if (points === undefined) {
+      points = 0 // fallback
+    }
 
     // Insert the result
     const { data: result, error: resultError } = await supabase
@@ -49,7 +78,7 @@ export async function POST(request: Request) {
         position: position,
         points: points,
         participant_name: body.participant_name || null,
-        notes: body.remarks || null,
+        notes: body.notes || null,
       })
       .select()
       .single()

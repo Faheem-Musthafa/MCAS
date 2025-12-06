@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { 
-  Calendar, Trophy, Users, Gavel, Loader2, Clock, 
-  TrendingUp, Award, Flame, CheckCircle2, PlayCircle
+  Calendar, Trophy, Users, ImageIcon, Loader2, Clock, 
+  TrendingUp, Award, Flame, CheckCircle2, PlayCircle, RefreshCw
 } from "lucide-react"
 import type { DbEvent, DbTeam, DbResultWithTeam } from "@/lib/supabase/types"
 import { FEST_CONFIG } from "@/lib/supabase/types"
@@ -14,7 +14,6 @@ interface Stats {
   ongoingEvents: number
   upcomingEvents: number
   totalTeams: number
-  totalJudges: number
   totalResults: number
   totalGallery: number
 }
@@ -26,7 +25,6 @@ export function DashboardOverview() {
     ongoingEvents: 0,
     upcomingEvents: 0,
     totalTeams: 0,
-    totalJudges: 0,
     totalResults: 0,
     totalGallery: 0,
   })
@@ -34,46 +32,53 @@ export function DashboardOverview() {
   const [teams, setTeams] = useState<DbTeam[]>([])
   const [recentResults, setRecentResults] = useState<DbResultWithTeam[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+
+  const fetchData = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) setRefreshing(true)
+      
+      const [eventsRes, teamsRes, galleryRes, resultsRes] = await Promise.all([
+        fetch("/api/events"),
+        fetch("/api/teams"),
+        fetch("/api/gallery"),
+        fetch("/api/results"),
+      ])
+
+      const eventsData = eventsRes.ok ? await eventsRes.json() : []
+      const teamsData = teamsRes.ok ? await teamsRes.json() : []
+      const galleryData = galleryRes.ok ? await galleryRes.json() : []
+      const resultsData = resultsRes.ok ? await resultsRes.json() : []
+
+      setEvents(eventsData)
+      setTeams(teamsData)
+      setRecentResults(resultsData.slice(0, 5))
+      setLastUpdated(new Date())
+
+      setStats({
+        totalEvents: eventsData.length,
+        completedEvents: eventsData.filter((e: DbEvent) => e.status === "completed").length,
+        ongoingEvents: eventsData.filter((e: DbEvent) => e.status === "ongoing").length,
+        upcomingEvents: eventsData.filter((e: DbEvent) => e.status === "upcoming").length,
+        totalTeams: teamsData.length,
+        totalResults: resultsData.length,
+        totalGallery: galleryData.length,
+      })
+    } catch (error) {
+      console.error("Failed to fetch stats:", error)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }, [])
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [eventsRes, teamsRes, judgesRes, galleryRes, resultsRes] = await Promise.all([
-          fetch("/api/events"),
-          fetch("/api/teams"),
-          fetch("/api/judges"),
-          fetch("/api/gallery"),
-          fetch("/api/results"),
-        ])
-
-        const eventsData = eventsRes.ok ? await eventsRes.json() : []
-        const teamsData = teamsRes.ok ? await teamsRes.json() : []
-        const judgesData = judgesRes.ok ? await judgesRes.json() : []
-        const galleryData = galleryRes.ok ? await galleryRes.json() : []
-        const resultsData = resultsRes.ok ? await resultsRes.json() : []
-
-        setEvents(eventsData)
-        setTeams(teamsData)
-        setRecentResults(resultsData.slice(0, 5))
-
-        setStats({
-          totalEvents: eventsData.length,
-          completedEvents: eventsData.filter((e: DbEvent) => e.status === "completed").length,
-          ongoingEvents: eventsData.filter((e: DbEvent) => e.status === "ongoing").length,
-          upcomingEvents: eventsData.filter((e: DbEvent) => e.status === "upcoming").length,
-          totalTeams: teamsData.length,
-          totalJudges: judgesData.length,
-          totalResults: resultsData.length,
-          totalGallery: galleryData.length,
-        })
-      } catch (error) {
-        console.error("Failed to fetch stats:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
     fetchData()
-  }, [])
+    // Auto-refresh for real-time updates
+    const interval = setInterval(() => fetchData(true), FEST_CONFIG.refreshInterval)
+    return () => clearInterval(interval)
+  }, [fetchData])
 
   // Get top 3 teams
   const topTeams = [...teams].sort((a, b) => b.total_points - a.total_points).slice(0, 3)
@@ -106,18 +111,25 @@ export function DashboardOverview() {
               {FEST_CONFIG.department} • {FEST_CONFIG.studentUnion}
             </p>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => fetchData(true)}
+              disabled={refreshing}
+              className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+              title="Refresh data"
+            >
+              <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
+            </button>
             <div className="text-center">
               <div className="text-3xl font-bold text-accent">{festProgress}%</div>
               <div className="text-xs text-muted-foreground">Fest Progress</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold">{FEST_CONFIG.days}</div>
-              <div className="text-xs text-muted-foreground">Days</div>
+              <div className="text-3xl font-bold">{stats.totalEvents}</div>
+              <div className="text-xs text-muted-foreground">Events</div>
             </div>
           </div>
         </div>
-
         {/* Progress Bar */}
         <div className="mt-4">
           <div className="h-2 bg-secondary rounded-full overflow-hidden">
@@ -128,6 +140,12 @@ export function DashboardOverview() {
           </div>
           <div className="flex justify-between text-xs text-muted-foreground mt-1">
             <span>{stats.completedEvents} completed</span>
+            {lastUpdated && (
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                Live • Updated {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
             <span>{stats.upcomingEvents} remaining</span>
           </div>
         </div>
@@ -172,11 +190,11 @@ export function DashboardOverview() {
         <div className="p-5 bg-card rounded-xl border border-border">
           <div className="flex items-center justify-between mb-3">
             <div className="p-2.5 rounded-lg bg-green-500/10 text-green-500">
-              <Gavel size={20} />
+              <ImageIcon size={20} />
             </div>
           </div>
-          <div className="text-2xl font-bold">{stats.totalJudges}</div>
-          <div className="text-sm text-muted-foreground">Expert Judges</div>
+          <div className="text-2xl font-bold">{stats.totalGallery}</div>
+          <div className="text-sm text-muted-foreground">Gallery Items</div>
         </div>
       </div>
 

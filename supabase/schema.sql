@@ -72,24 +72,15 @@ CREATE TABLE results (
   UNIQUE(event_id, team_id, position)
 );
 
--- Judges Table
-CREATE TABLE judges (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  expertise TEXT NOT NULL,
-  image TEXT,
-  access_code TEXT UNIQUE NOT NULL,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+CREATE TYPE gallery_type AS ENUM ('photo', 'poster');
 
 -- Gallery Items Table
 CREATE TABLE gallery (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   src TEXT NOT NULL,
   title TEXT NOT NULL,
-  span TEXT NOT NULL DEFAULT 'col-span-1 row-span-1',
+  span TEXT NOT NULL DEFAULT '1x1',
+  type gallery_type NOT NULL DEFAULT 'photo',
   event_id UUID REFERENCES events(id) ON DELETE SET NULL,
   day INTEGER,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -121,8 +112,8 @@ CREATE INDEX idx_teams_total_points ON teams(total_points DESC);
 CREATE INDEX idx_results_event ON results(event_id);
 CREATE INDEX idx_results_team ON results(team_id);
 CREATE INDEX idx_results_position ON results(position);
-CREATE INDEX idx_judges_access_code ON judges(access_code);
 CREATE INDEX idx_gallery_event ON gallery(event_id);
+CREATE INDEX idx_gallery_type ON gallery(type);
 CREATE INDEX idx_announcements_active ON announcements(is_active);
 
 -- =============================================
@@ -143,9 +134,6 @@ CREATE TRIGGER update_events_updated_at BEFORE UPDATE ON events
 CREATE TRIGGER update_teams_updated_at BEFORE UPDATE ON teams
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_judges_updated_at BEFORE UPDATE ON judges
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
 CREATE TRIGGER update_results_updated_at BEFORE UPDATE ON results
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -159,7 +147,6 @@ CREATE TRIGGER update_gallery_updated_at BEFORE UPDATE ON gallery
 -- Enable RLS on all tables
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
-ALTER TABLE judges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE gallery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
@@ -167,7 +154,6 @@ ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
 -- Public read access for all tables (for the public website)
 CREATE POLICY "Public read access for events" ON events FOR SELECT USING (true);
 CREATE POLICY "Public read access for teams" ON teams FOR SELECT USING (true);
-CREATE POLICY "Public read access for judges" ON judges FOR SELECT USING (true);
 CREATE POLICY "Public read access for results" ON results FOR SELECT USING (true);
 CREATE POLICY "Public read access for gallery" ON gallery FOR SELECT USING (true);
 CREATE POLICY "Public read access for announcements" ON announcements FOR SELECT USING (true);
@@ -181,10 +167,6 @@ CREATE POLICY "Authenticated users can delete events" ON events FOR DELETE USING
 CREATE POLICY "Authenticated users can insert teams" ON teams FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated users can update teams" ON teams FOR UPDATE USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated users can delete teams" ON teams FOR DELETE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Authenticated users can insert judges" ON judges FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can update judges" ON judges FOR UPDATE USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can delete judges" ON judges FOR DELETE USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Authenticated users can insert results" ON results FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated users can update results" ON results FOR UPDATE USING (auth.role() = 'authenticated');
@@ -246,18 +228,6 @@ INSERT INTO events (title, description, venue, date, day, time_slot, category, s
   ('DJ Night', 'Student DJs battle', 'Open Air Theatre', 'DEC 20', 6, '7:00 PM', 'ART', 'on-stage', 'upcoming', 'individual', 10, '15 minutes set per DJ.');
 
 -- =============================================
--- SEED DATA - Judges
--- =============================================
-
-INSERT INTO judges (name, expertise, image, access_code) VALUES
-  ('Dr. Anitha Menon', 'Classical Arts & Music', NULL, 'JUDGE001'),
-  ('Prof. Rajesh Kumar', 'Sports & Athletics', NULL, 'JUDGE002'),
-  ('Ms. Priya Nair', 'Contemporary Dance', NULL, 'JUDGE003'),
-  ('Mr. Arjun Sharma', 'Theatre & Drama', NULL, 'JUDGE004'),
-  ('Coach John Mathew', 'Football & Basketball', NULL, 'JUDGE005'),
-  ('Dr. Sneha Patel', 'Visual Arts', NULL, 'JUDGE006');
-
--- =============================================
 -- SEED DATA - Sample Gallery
 -- =============================================
 
@@ -301,3 +271,36 @@ INSERT INTO announcements (title, message, type, is_active, priority) VALUES
 -- ALTER TABLE teams DROP COLUMN IF EXISTS category;
 -- ALTER TABLE teams DROP COLUMN IF EXISTS wins;
 -- ALTER TABLE teams DROP COLUMN IF EXISTS podiums;
+
+-- =============================================
+-- SCORES TABLE (Added for manual scoring/approval workflow)
+-- =============================================
+
+CREATE TYPE score_status AS ENUM ('pending', 'approved', 'rejected');
+
+CREATE TABLE scores (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  total_score INTEGER NOT NULL DEFAULT 0,
+  status score_status NOT NULL DEFAULT 'pending',
+  submitted_at TIMESTAMPTZ DEFAULT NOW(),
+  submitted_by TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_scores_event ON scores(event_id);
+CREATE INDEX idx_scores_team ON scores(team_id);
+CREATE INDEX idx_scores_status ON scores(status);
+
+CREATE TRIGGER update_scores_updated_at BEFORE UPDATE ON scores
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE scores ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public read access for scores" ON scores FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can insert scores" ON scores FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated users can update scores" ON scores FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated users can delete scores" ON scores FOR DELETE USING (auth.role() = 'authenticated');
+

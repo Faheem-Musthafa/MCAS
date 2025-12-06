@@ -51,17 +51,6 @@ export interface DbTeam {
   updated_at: string
 }
 
-export interface DbJudge {
-  id: string
-  name: string
-  expertise: string
-  image: string | null
-  access_code: string
-  user_id: string | null
-  created_at: string
-  updated_at: string
-}
-
 // Results table - stores final positions for each event
 export interface DbResult {
   id: string
@@ -86,14 +75,7 @@ export interface DbScore {
   updated_at: string
 }
 
-export interface DbJudgeScore {
-  id: string
-  score_id: string
-  judge_id: string
-  score: number
-  criteria: string
-  created_at: string
-}
+export type GalleryType = "photo" | "poster"
 
 export interface DbGalleryItem {
   id: string
@@ -102,6 +84,7 @@ export interface DbGalleryItem {
   event_id: string | null
   day: number | null
   span: string
+  type: GalleryType
   created_at: string
   updated_at: string
 }
@@ -135,7 +118,6 @@ export interface DbResultWithTeam extends DbResult {
 }
 
 export interface DbScoreWithDetails extends DbScore {
-  judge_scores: DbJudgeScore[]
   event?: DbEvent
   team?: DbTeam
 }
@@ -173,13 +155,6 @@ export type InsertTeam = {
   bronze?: number
 }
 
-export type InsertJudge = {
-  name: string
-  expertise: string
-  access_code: string
-  image?: string | null
-}
-
 export type InsertResult = {
   event_id: string
   team_id: string
@@ -197,19 +172,13 @@ export type InsertScore = {
   submitted_by?: string | null
 }
 
-export type InsertJudgeScore = {
-  score_id: string
-  judge_id: string
-  score: number
-  criteria: string
-}
-
 export type InsertGalleryItem = {
   src: string
   title: string
   event_id?: string | null
   day?: number | null
   span?: string
+  type?: GalleryType
 }
 
 export type InsertAnnouncement = {
@@ -222,7 +191,6 @@ export type InsertAnnouncement = {
 // Update types (all fields optional)
 export type UpdateEvent = Partial<InsertEvent>
 export type UpdateTeam = Partial<InsertTeam>
-export type UpdateJudge = Partial<InsertJudge>
 export type UpdateResult = Partial<InsertResult>
 export type UpdateScore = Partial<InsertScore>
 export type UpdateGalleryItem = Partial<InsertGalleryItem>
@@ -242,7 +210,31 @@ export const FEST_CONFIG = {
   department: "Department of Computer Science",
   studentUnion: "11th Student Union",
   location: "Main Campus",
-  days: 6,
-  startDate: new Date("2025-12-15"),
-  endDate: new Date("2025-12-20"),
+  Created : "Faheem Musthafa",
+  // College departments for team registration
+  departments: [
+    "Computer Science",
+    "Electronics",
+    "Mechanical",
+    "Civil",
+    "Electrical",
+    "Information Technology",
+    "Commerce",
+    "Management",
+    "Arts",
+    "Science",
+  ],
+  // Scoring system
+  scoring: {
+    ART: {
+      group: { "1st": 10, "2nd": 5, "3rd": 3, "participation": 0 },
+      individual: { "1st": 5, "2nd": 3, "3rd": 1, "participation": 0 },
+    },
+    SPORTS: {
+      group: { "1st": 10, "2nd": 5, "3rd": 3, "participation": 0 },
+      individual: { "1st": 5, "2nd": 3, "3rd": 1, "participation": 0 },
+    },
+  },
+  // Auto-refresh interval in milliseconds (30 seconds)
+  refreshInterval: 30000,
 }

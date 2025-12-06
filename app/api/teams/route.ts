@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { cookies } from "next/headers"
 
 export async function GET() {
   try {
@@ -20,6 +21,13 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const cookieStore = await cookies()
+    const session = cookieStore.get("admin_session")
+    
+    if (!session?.value) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const supabase = createAdminClient()
     const body = await request.json()
     

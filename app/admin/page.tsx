@@ -3,15 +3,14 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { LayoutDashboard, Calendar, ImageIcon, Gavel, ArrowLeft, Menu, X, Users, Award, Loader2, LogOut } from "lucide-react"
+import { LayoutDashboard, Calendar, ImageIcon, ArrowLeft, Menu, X, Users, Award, Loader2, LogOut } from "lucide-react"
 import { EventsManager } from "@/components/admin/events-manager"
-import { JudgesManager } from "@/components/admin/judges-manager"
 import { GalleryManager } from "@/components/admin/gallery-manager"
 import { DashboardOverview } from "@/components/admin/dashboard-overview"
 import { TeamsManager } from "@/components/admin/teams-manager"
 import { ResultsManager } from "@/components/admin/results-manager"
 
-type Tab = "overview" | "events" | "teams" | "results" | "judges" | "gallery"
+type Tab = "overview" | "events" | "teams" | "results" | "gallery"
 
 export default function AdminPage() {
   const router = useRouter()
@@ -53,7 +52,6 @@ export default function AdminPage() {
     { id: "events" as Tab, label: "Events", icon: Calendar },
     { id: "teams" as Tab, label: "Teams", icon: Users },
     { id: "results" as Tab, label: "Results", icon: Award },
-    { id: "judges" as Tab, label: "Judges", icon: Gavel },
     { id: "gallery" as Tab, label: "Gallery", icon: ImageIcon },
   ]
 
@@ -166,7 +164,6 @@ export default function AdminPage() {
           {activeTab === "events" && <EventsManager />}
           {activeTab === "teams" && <TeamsManager />}
           {activeTab === "results" && <ResultsManager />}
-          {activeTab === "judges" && <JudgesManager />}
           {activeTab === "gallery" && <GalleryManager />}
         </div>
       </main>

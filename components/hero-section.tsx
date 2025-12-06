@@ -2,174 +2,214 @@
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { ArrowRight, Trophy, Palette } from "lucide-react"
+import { ArrowRight, Trophy, Sparkles, Play, Zap, Star } from "lucide-react"
 import { FEST_CONFIG } from "@/lib/supabase/types"
 
 export function HeroSection() {
   const [mounted, setMounted] = useState(false)
+  const [particles, setParticles] = useState<Array<{ left: string; top: string; delay: string; duration: string }>>([])
 
   useEffect(() => {
     setMounted(true)
+    setParticles(
+      [...Array(12)].map((_, i) => ({
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        delay: `${i * 0.5}s`,
+        duration: `${4 + Math.random() * 4}s`,
+      }))
+    )
   }, [])
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-radial-pastel">
-      {/* Animated Blob Shapes */}
+    <section className="relative min-h-screen overflow-hidden bg-transparent">
+      {/* Dynamic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="blob blob-pink absolute -top-32 -left-32 w-[400px] h-[400px] opacity-50" style={{ animationDelay: '0s' }} />
-        <div className="blob blob-blue absolute -top-20 -right-20 w-[350px] h-[350px] opacity-50" style={{ animationDelay: '2s' }} />
-        <div className="blob blob-purple absolute top-1/3 -left-20 w-[300px] h-[300px] opacity-40" style={{ animationDelay: '4s' }} />
-        <div className="blob blob-green absolute bottom-20 -right-32 w-[350px] h-[350px] opacity-40" style={{ animationDelay: '1s' }} />
-        <div className="blob blob-yellow absolute -bottom-20 left-1/4 w-[250px] h-[250px] opacity-40" style={{ animationDelay: '3s' }} />
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 pt-28 pb-12">
+        {/* Gradient Orbs */}
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[var(--art-purple)]/20 blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[var(--art-blue)]/20 blur-[120px] animate-pulse-slow animation-delay-2000" />
+        <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[40%] h-[40%] rounded-full bg-[var(--art-pink)]/10 blur-[100px] animate-pulse-slow animation-delay-4000" />
         
-        {/* Top Section - Logo and Title */}
-        <div className={`flex flex-col items-center text-center transition-all duration-700 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"}`}>
-          
-          {/* IBDA Union Logo */}
-          <div className="relative w-28 h-28 md:w-36 md:h-36 mb-6 animate-float-gentle">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[var(--art-pink)] to-[var(--art-purple)] blur-2xl opacity-50" />
-            <div className="relative w-full h-full rounded-full overflow-hidden bg-slate-800 shadow-xl">
-              <Image
-                src="/ibda.png"
-                alt="IBDA - Student Union"
-                fill
-                className="object-contain p-3"
-                priority
-              />
-            </div>
-          </div>
-
-          {/* Department Badge */}
-          <span className="inline-flex items-center gap-2 px-6 py-2.5 glass-card text-sm tracking-wide rounded-full font-medium text-[var(--art-text)] mb-4">
-            {FEST_CONFIG.department} • {FEST_CONFIG.studentUnion}
-          </span>
-
-          {/* Main Title */}
-          <h1 className={`transition-all duration-700 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`} style={{ transitionDelay: "200ms" }}>
-            <span className="block text-5xl md:text-7xl lg:text-8xl font-black tracking-tight gradient-text drop-shadow-sm">
-              MCAS 2025
-            </span>
-            <span className="block text-xl md:text-2xl lg:text-3xl font-light text-[var(--art-text-light)] mt-3">
-              {FEST_CONFIG.tagline}
-            </span>
-          </h1>
-        </div>
-
-        {/* Event Cards Section - Sports & Arts */}
-        <div className={`mt-12 grid md:grid-cols-2 gap-6 lg:gap-10 max-w-5xl mx-auto transition-all duration-700 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`} style={{ transitionDelay: "300ms" }}>
-          
-          {/* Annual Sports Meet Card */}
-          <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-[var(--art-green)] to-[var(--art-blue)] rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity" />
-            <div className="relative glass-card rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
-              {/* Image */}
-              <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-teal-100 to-blue-100">
-                <Image
-                  src="/ANNUAL SPORTS MEET_20251203_101759_0000.png"
-                  alt="Annual Sports Meet 2025"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                
-                {/* Badge */}
-                <div className="absolute top-4 left-4 z-10">
-                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold shadow-lg" style={{ background: 'rgba(212, 240, 240, 0.95)', color: '#0d9488' }}>
-                    <Trophy size={16} />
-                    SPORTS
-                  </span>
-                </div>
-              </div>
-
-              {/* Info Footer */}
-              <div className="p-5 bg-white/50">
-                <h3 className="text-xl font-bold text-[var(--art-text)] mb-1">Annual Sports Meet</h3>
-                <p className="text-sm text-[var(--art-text-light)] mb-4">Compete. Conquer. Celebrate.</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(212, 240, 240, 0.8)' }}>
-                      <Trophy size={20} className="text-teal-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[var(--art-text)]">Day 1 & 2</p>
-                      <p className="text-xs text-[var(--art-text-light)]">15 - 16 Dec 2025</p>
-                    </div>
-                  </div>
-                  <a href="#events" className="px-5 py-2.5 rounded-full text-sm font-semibold flex items-center gap-1 group/btn" style={{ background: 'rgba(212, 240, 240, 0.9)', color: '#0d9488' }}>
-                    View <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Annual Arts Fest Card */}
-          <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-[var(--art-pink)] to-[var(--art-purple)] rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity" />
-            <div className="relative glass-card rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
-              {/* Image */}
-              <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-pink-100 to-purple-100">
-                <Image
-                  src="/ANNUAL SPORTS MEET_20251203_101045_0000.png"
-                  alt="Annual Arts Fest 2025"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                
-                {/* Badge */}
-                <div className="absolute top-4 left-4 z-10">
-                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold shadow-lg" style={{ background: 'rgba(230, 206, 242, 0.95)', color: '#9333ea' }}>
-                    <Palette size={16} />
-                    ARTS
-                  </span>
-                </div>
-              </div>
-
-              {/* Info Footer */}
-              <div className="p-5 bg-white/50">
-                <h3 className="text-xl font-bold text-[var(--art-text)] mb-1">Annual Arts Fest</h3>
-                <p className="text-sm text-[var(--art-text-light)] mb-4">Create. Express. Inspire.</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(230, 206, 242, 0.8)' }}>
-                      <Palette size={20} className="text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[var(--art-text)]">Day 3 & 4</p>
-                      <p className="text-xs text-[var(--art-text-light)]">17 - 18 Dec 2025</p>
-                    </div>
-                  </div>
-                  <a href="#events" className="px-5 py-2.5 rounded-full text-sm font-semibold flex items-center gap-1 group/btn" style={{ background: 'rgba(255, 209, 220, 0.9)', color: '#db2777' }}>
-                    View <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* CTA Buttons */}
-        <div className={`mt-12 flex flex-wrap gap-4 justify-center transition-all duration-700 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`} style={{ transitionDelay: "400ms" }}>
-          <a href="#events" className="group inline-flex items-center gap-2 px-8 py-4 btn-pastel-pink rounded-full font-semibold text-lg transition-all duration-300 hover:gap-4 hover:shadow-xl">
-            🎨 Explore All Events
-            <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
-          </a>
-          <a href="#scoreboard" className="group inline-flex items-center gap-2 px-8 py-4 btn-pastel-blue rounded-full font-semibold text-lg transition-all duration-300 hover:gap-4 hover:shadow-xl">
-            🏆 Live Scoreboard
-            <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
-          </a>
-        </div>
+        {/* Floating particles */}
+        {particles.map((particle, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-[var(--art-accent)]/60 animate-float-gentle"
+            style={{
+              left: particle.left,
+              top: particle.top,
+              animationDelay: particle.delay,
+              animationDuration: particle.duration
+            }}
+          />
+        ))}
       </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 rounded-full border-2 border-[var(--art-text-light)]/50 flex items-start justify-center p-2">
-          <div className="w-1.5 h-3 rounded-full bg-[var(--art-accent)] animate-pulse" />
+      {/* Content */}
+      <div className="relative z-10 min-h-screen flex flex-col">
+        <div className="flex-1 flex items-center justify-center px-4 py-20 md:py-24">
+          <div className="max-w-7xl w-full mx-auto">
+            
+            {/* Top Badge Row */}
+            <div className={`flex flex-wrap justify-center items-center gap-4 mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+              {/* Live Badge */}
+              <div className="glass-card inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-[var(--art-accent)]/30">
+                <div className="relative flex items-center justify-center">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[var(--art-accent)]" />
+                  <div className="absolute w-2.5 h-2.5 rounded-full bg-[var(--art-accent)] animate-ping" />
+                </div>
+                <span className="text-sm font-bold text-[var(--art-accent)] uppercase tracking-wider">Live Now</span>
+              </div>
+              
+              {/* Divider */}
+              <div className="hidden sm:block w-12 h-px bg-gradient-to-r from-transparent via-[var(--border)] to-transparent" />
+              
+              {/* Student Union Badge */}
+              <div className="glass-card inline-flex items-center gap-2 px-4 py-2 rounded-full">
+                <Sparkles size={14} className="text-[var(--art-purple)]" />
+                <span className="text-sm font-medium text-[var(--art-text-light)]">{FEST_CONFIG.studentUnion}</span>
+              </div>
+            </div>
+
+            {/* Main Hero Content */}
+            <div className={`text-center mb-12 transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              
+              {/* Logo with enhanced styling */}
+              <div className="flex justify-center mb-6">
+                <div className="relative group">
+                  {/* Outer glow ring */}
+                  <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-[var(--art-pink)]/50 via-[var(--art-purple)]/50 to-[var(--art-blue)]/50 blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+                  
+                  {/* Spinning border */}
+                  <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[var(--art-pink)] via-[var(--art-purple)] to-[var(--art-blue)] animate-spin-slow opacity-70" />
+                  
+                  {/* Logo container */}
+                  <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 shadow-2xl overflow-hidden p-3">
+                    <Image
+                      src="/ibda.png"
+                      alt="IBDA"
+                      fill
+                      className="object-contain p-2"
+                      priority
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Department subtitle */}
+              <p className="text-xs md:text-xl font-medium text-slate-500 tracking-[0.3em] uppercase mb-6">
+                {FEST_CONFIG.department}
+              </p>
+              
+              {/* Main Title with stacked layout */}
+              <div className="mb-8 relative">
+                <h1 className="relative inline-block">
+                  {/* Decorative elements */}
+                  <Star className="absolute -top-4 -left-8 md:-left-16 w-6 h-6 text-[var(--art-yellow)] animate-pulse" />
+                  <Star className="absolute -bottom-2 -right-6 md:-right-12 w-4 h-4 text-[var(--art-pink)] animate-pulse animation-delay-2000" />
+                  
+                  <span className="block text-7xl sm:text-8xl md:text-9xl lg:text-[12rem] font-black tracking-tighter text-slate-900 leading-[0.85] drop-shadow-sm">
+                    MCAS
+                  </span>
+                  <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-9xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#FF0080] via-[#7928CA] to-[#0070F3] leading-[0.9] mt-2 drop-shadow-md pb-4">
+                    2025
+                  </span>
+                </h1>
+              </div>
+              
+              {/* Tagline with enhanced styling */}
+              <div className="relative max-w-xl mx-auto">
+                <p className="text-lg md:text-xl lg:text-2xl text-slate-600 font-light leading-relaxed">
+                  {FEST_CONFIG.tagline}
+                </p>
+                {/* Decorative line */}
+                <div className="mt-6 flex items-center justify-center gap-3">
+                  <div className="w-12 h-0.5 bg-gradient-to-r from-transparent to-[var(--art-pink)]" />
+                  <div className="w-2 h-2 rounded-full bg-[var(--art-accent)]" />
+                  <div className="w-12 h-0.5 bg-gradient-to-l from-transparent to-[var(--art-blue)]" />
+                </div>
+              </div>
+            </div>
+
+            {/* Logos Section - Ujjwalam X Polika */}
+            <div className={`flex flex-col md:flex-row items-center justify-center gap-8 md:gap-20 mb-20 transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              
+              {/* Ujjwalam Logo */}
+              <div className="relative group perspective-1000">
+                <div className="absolute inset-0 bg-gradient-to-tr from-[var(--art-pink)]/40 to-[var(--art-purple)]/40 blur-[60px] rounded-full opacity-40 group-hover:opacity-100 transition-all duration-700 scale-75 group-hover:scale-125" />
+                <div className="relative w-32 h-32 md:w-48 md:h-48 lg:w-72 lg:h-72 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 filter drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                  <Image
+                    src="/ujjwalam.png"
+                    alt="Ujjwalam Logo"
+                    fill
+                    className="object-contain drop-shadow-2xl"
+                    priority
+                  />
+                </div>
+              </div>
+
+              {/* The X */}
+              <div className="relative flex flex-col items-center justify-center z-10">
+                <span className="text-6xl md:text-9xl font-black text-slate-200 select-none scale-150 transform">X</span>
+              </div>
+
+              {/* Polika Logo */}
+              <div className="relative group perspective-1000">
+                <div className="absolute inset-0 bg-gradient-to-tl from-[var(--art-blue)]/40 to-[var(--art-green)]/40 blur-[60px] rounded-full opacity-40 group-hover:opacity-100 transition-all duration-700 scale-75 group-hover:scale-125" />
+                <div className="relative w-32 h-32 md:w-48 md:h-48 lg:w-72 lg:h-72 transition-all duration-500 group-hover:scale-110 group-hover:-rotate-6 filter drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                  <Image
+                    src="/polika.png"
+                    alt="Polika Logo"
+                    fill
+                    className="object-contain drop-shadow-2xl"
+                    priority
+                  />
+                </div>
+              </div>
+
+            </div>
+
+            {/* CTA Section - Enhanced */}
+            <div className={`flex flex-col items-center gap-8 transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              
+              {/* Primary Buttons */}
+              <div className="flex flex-wrap gap-4 justify-center">
+                <a 
+                  href="#events" 
+                  className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full font-bold text-[var(--art-text)] overflow-hidden transition-all duration-300 hover:scale-105"
+                >
+                  {/* Button background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[var(--art-pink)] via-[var(--art-accent)] to-[var(--art-pink)] bg-[length:200%_100%] animate-shimmer" />
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  
+                  <span className="relative flex items-center gap-3">
+                    <Play size={18} className="fill-current" />
+                    Explore Events
+                    <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                  </span>
+                </a>
+                
+                <a 
+                  href="#scoreboard" 
+                  className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full font-bold text-[var(--art-text)] overflow-hidden transition-all duration-300 hover:scale-105"
+                >
+                  {/* Button background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[var(--art-blue)] via-[var(--art-green)] to-[var(--art-blue)] bg-[length:200%_100%]" />
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  
+                  <span className="relative flex items-center gap-3">
+                    <Trophy size={18} />
+                    Live Scoreboard
+                  </span>
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+
+        </div>
     </section>
   )
 }
