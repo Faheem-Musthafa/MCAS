@@ -130,11 +130,12 @@ interface ResultPosterProps {
   onSaved?: () => void
 }
 
+// Updated color scheme based on the reference poster
 const POSITION_COLORS: Record<ResultPosition, { bg: string; text: string; glow: string; emoji: string }> = {
-  "1st": { bg: "#FFD700", text: "#000", glow: "rgba(255, 215, 0, 0.6)", emoji: "🥇" },
-  "2nd": { bg: "#C0C0C0", text: "#000", glow: "rgba(192, 192, 192, 0.6)", emoji: "🥈" },
-  "3rd": { bg: "#CD7F32", text: "#fff", glow: "rgba(205, 127, 50, 0.6)", emoji: "🥉" },
-  "participation": { bg: "#6366f1", text: "#fff", glow: "rgba(99, 102, 241, 0.6)", emoji: "🎖️" },
+  "1st": { bg: "#FBBF24", text: "#78350F", glow: "rgba(251, 191, 36, 0.6)", emoji: "🥇" }, // Gold
+  "2nd": { bg: "#94A3B8", text: "#0F172A", glow: "rgba(148, 163, 184, 0.6)", emoji: "🥈" }, // Silver/Blue
+  "3rd": { bg: "#B45309", text: "#FFFBEB", glow: "rgba(180, 83, 9, 0.6)", emoji: "🥉" },   // Bronze
+  "participation": { bg: "#334155", text: "#F8FAFC", glow: "rgba(51, 65, 85, 0.6)", emoji: "🎖️" }, // Slate
 }
 
 export function ResultPoster({ data, onClose, onSaved }: ResultPosterProps) {
@@ -156,226 +157,168 @@ export function ResultPoster({ data, onClose, onSaved }: ResultPosterProps) {
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Poster dimensions (Instagram story size)
+    // Poster dimensions (Square)
     const width = 1080
-    const height = 1920
+    const height = 1080
     canvas.width = width
     canvas.height = height
 
-    // Background gradient - Deep rich dark theme
-    const gradient = ctx.createLinearGradient(0, 0, width, height)
-    gradient.addColorStop(0, "#0f172a")     // Slate 900
-    gradient.addColorStop(0.4, "#1e1b4b")   // Indigo 950
-    gradient.addColorStop(0.8, "#312e81")   // Indigo 900
-    gradient.addColorStop(1, "#0f172a")     // Slate 900
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, width, height)
+    // Load background image
+    const bgImage = new window.Image()
+    bgImage.src = event.category === "ART" ? "/POSTER_TEMP_ARTS.png" : "/POSTER_TEMP_SPORTS.png"
+    bgImage.crossOrigin = "anonymous"
+    
+    // Load medal images
+    const medalImages: Record<string, HTMLImageElement> = {}
+    const positions = ["1st", "2nd", "3rd"]
+    
+    await Promise.all([
+      new Promise((resolve) => {
+        bgImage.onload = resolve
+        bgImage.onerror = () => {
+          console.error("Failed to load background image")
+          resolve(null)
+        }
+      }),
+      ...positions.map(pos => new Promise((resolve) => {
+        const img = new window.Image()
+        // Map 1st -> 1.png, 2nd -> 2.png, 3rd -> 3.png
+        const imgName = pos.replace("st", "").replace("nd", "").replace("rd", "")
+        img.src = `/${imgName}.png`
+        img.crossOrigin = "anonymous"
+        img.onload = () => {
+          medalImages[pos] = img
+          resolve(null)
+        }
+        img.onerror = () => {
+          console.error(`Failed to load medal ${pos}`)
+          resolve(null)
+        }
+      }))
+    ])
 
-    // Add noise texture for premium feel
-    drawNoise(ctx, width, height)
+    // Draw background if loaded
+    if (bgImage.complete && bgImage.naturalWidth !== 0) {
+      ctx.drawImage(bgImage, 0, 0, width, height)
+    } else {
+        // Fallback gradient
+        const gradient = ctx.createLinearGradient(0, 0, width, height)
+        gradient.addColorStop(0, "#0f172a")
+        gradient.addColorStop(1, "#1e1b4b")
+        ctx.fillStyle = gradient
+        ctx.fillRect(0, 0, width, height)
+    }
 
-    // Decorative elements
-    drawDecorativeElements(ctx, width, height)
-
-    // Header - Fest Name with 3D text effect
+    // Event Title Area - Script/Handwritten Style
+    const titleY = 240
     ctx.save()
-    ctx.shadowColor = "rgba(0, 0, 0, 0.5)"
-    ctx.shadowBlur = 0
-    ctx.shadowOffsetX = 4
-    ctx.shadowOffsetY = 4
-    ctx.fillStyle = "#ffffff"
-    ctx.font = "900 64px system-ui, -apple-system, sans-serif"
+    // Title with gradient color (coral/orange)
+    ctx.fillStyle = "#F5573B"
+    ctx.font = "italic 900 72px 'Georgia', 'Times New Roman', serif"
     ctx.textAlign = "center"
-    ctx.fillText(FEST_CONFIG.name, width / 2, 140)
-    
-    // Subheader with tracking
-    ctx.shadowColor = "transparent"
-    ctx.shadowOffsetX = 0
-    ctx.shadowOffsetY = 0
-    ctx.fillStyle = "#94a3b8"
-    ctx.font = "500 28px system-ui, -apple-system, sans-serif"
-    ctx.letterSpacing = "4px"
-    ctx.fillText(FEST_CONFIG.college.toUpperCase(), width / 2, 190)
+    const eventTitle = event.title
+    wrapText(ctx, eventTitle, width / 2, titleY, width - 150, 80)
     ctx.restore()
-
-    // "RESULT ANNOUNCED" Banner - Modern Glass Style
-    const bannerY = 280
     
-    // Glow behind banner
-    const bannerGlow = ctx.createRadialGradient(width/2, bannerY, 0, width/2, bannerY, 400)
-    bannerGlow.addColorStop(0, "rgba(139, 92, 246, 0.3)")
-    bannerGlow.addColorStop(1, "transparent")
-    ctx.fillStyle = bannerGlow
-    ctx.fillRect(0, bannerY - 100, width, 200)
-
-    // Banner background
+    // "Results" subtitle
     ctx.save()
-    ctx.shadowColor = "rgba(139, 92, 246, 0.4)"
-    ctx.shadowBlur = 20
-    ctx.shadowOffsetY = 10
-    
-    const bannerGradient = ctx.createLinearGradient(100, bannerY - 40, width - 100, bannerY + 40)
-    bannerGradient.addColorStop(0, "#4c1d95")
-    bannerGradient.addColorStop(0.5, "#6d28d9")
-    bannerGradient.addColorStop(1, "#4c1d95")
-    
-    ctx.fillStyle = bannerGradient
-    roundRect(ctx, 180, bannerY - 45, width - 360, 90, 45)
-    ctx.fill()
-    
-    // Inner shine
-    const shineGrad = ctx.createLinearGradient(0, bannerY - 45, 0, bannerY)
-    shineGrad.addColorStop(0, "rgba(255,255,255,0.2)")
-    shineGrad.addColorStop(1, "transparent")
-    ctx.fillStyle = shineGrad
-    roundRect(ctx, 180, bannerY - 45, width - 360, 45, 45)
-    ctx.fill()
-    ctx.restore()
-    
-    // Banner Text
-    ctx.fillStyle = "#fff"
-    ctx.font = "bold 36px system-ui, -apple-system, sans-serif"
+    ctx.fillStyle = "#64748b"
+    ctx.font = "500 28px 'Inter', system-ui, sans-serif"
     ctx.textAlign = "center"
-    ctx.fillText("✨ RESULT ANNOUNCED ✨", width / 2, bannerY + 12)
-
-    // Event Title Area
-    const titleY = 460
-    ctx.save()
-    // Title Glow
-    ctx.shadowColor = "rgba(255, 255, 255, 0.5)"
-    ctx.shadowBlur = 30
-    ctx.fillStyle = "#fff"
-    ctx.font = "900 84px system-ui, -apple-system, sans-serif"
-    const eventTitle = event.title.toUpperCase()
-    wrapText(ctx, eventTitle, width / 2, titleY, width - 100, 90)
+    ctx.fillText("Results", width / 2, titleY + 90)
     ctx.restore()
-
-    // Event Details Pill
-    const detailsY = 580
-    ctx.fillStyle = "rgba(255, 255, 255, 0.08)"
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"
-    ctx.lineWidth = 1
-    roundRect(ctx, (width - 600) / 2, detailsY - 30, 600, 60, 30)
-    ctx.fill()
-    ctx.stroke()
-    
-    ctx.fillStyle = "#cbd5e1"
-    ctx.font = "600 28px system-ui, -apple-system, sans-serif"
-    const categoryIcon = event.category === "ART" ? "🎨" : "⚽"
-    const stageIcon = event.stage_type === "on-stage" ? "🎤" : "📝"
-    ctx.fillText(`${categoryIcon} ${event.category}   |   ${stageIcon} ${event.stage_type.toUpperCase()}   |   Day ${event.day}`, width / 2, detailsY + 10)
 
     // Results Section
-    let yPos = 720
+    let yPos = 420
     const sortedResults = [...results].sort((a, b) => {
       const order = { "1st": 0, "2nd": 1, "3rd": 2, "participation": 3 }
       return order[a.position] - order[b.position]
     })
 
     for (const result of sortedResults) {
-      const colors = POSITION_COLORS[result.position]
-      const isWinner = result.position === "1st"
-      const cardHeight = isWinner ? 260 : 220
-      const cardWidth = width - 140
-      const xPos = 70
+      const cardHeight = 120
+      const cardWidth = width - 200
+      const xPos = 100
       
-      // Card Background with Glassmorphism
+      // Card Background - Clean white with subtle shadow
       ctx.save()
-      ctx.shadowColor = "rgba(0,0,0,0.3)"
-      ctx.shadowBlur = 20
-      ctx.shadowOffsetY = 10
+      ctx.shadowColor = "rgba(0,0,0,0.08)"
+      ctx.shadowBlur = 25
+      ctx.shadowOffsetY = 8
       
-      // Gradient based on position
-      const cardGrad = ctx.createLinearGradient(xPos, yPos, xPos + cardWidth, yPos + cardHeight)
-      if (isWinner) {
-        cardGrad.addColorStop(0, "rgba(255, 215, 0, 0.15)")
-        cardGrad.addColorStop(1, "rgba(255, 215, 0, 0.05)")
-      } else {
-        cardGrad.addColorStop(0, "rgba(255, 255, 255, 0.1)")
-        cardGrad.addColorStop(1, "rgba(255, 255, 255, 0.05)")
-      }
-      
-      ctx.fillStyle = cardGrad
-      roundRect(ctx, xPos, yPos, cardWidth, cardHeight, 30)
+      ctx.fillStyle = "rgba(255, 255, 255, 0.98)"
+      roundRect(ctx, xPos, yPos, cardWidth, cardHeight, 20)
       ctx.fill()
       ctx.restore()
 
-      // Border
-      ctx.strokeStyle = isWinner ? "rgba(255, 215, 0, 0.3)" : "rgba(255, 255, 255, 0.1)"
-      ctx.lineWidth = isWinner ? 3 : 1
-      roundRect(ctx, xPos, yPos, cardWidth, cardHeight, 30)
-      ctx.stroke()
-
-      // Position Badge (Left Side)
-      const badgeSize = isWinner ? 140 : 110
-      const badgeX = xPos + 40
+      // Position Medal/Badge (Left Side)
+      const badgeSize = 80
+      const badgeX = xPos + 25
       const badgeY = yPos + (cardHeight - badgeSize) / 2
       
-      drawMedal(ctx, badgeX, badgeY, badgeSize, result.position)
+      if (medalImages[result.position]) {
+        // Draw Image Medal
+        ctx.save()
+        ctx.shadowColor = "rgba(0,0,0,0.2)"
+        ctx.shadowBlur = 8
+        ctx.shadowOffsetY = 4
+        ctx.drawImage(medalImages[result.position], badgeX, badgeY, badgeSize, badgeSize)
+        ctx.restore()
+      } else {
+        // Draw Fallback Circle for Participation
+        ctx.save()
+        const medalColors = POSITION_COLORS[result.position] || POSITION_COLORS["participation"]
+        
+        ctx.shadowColor = medalColors.glow
+        ctx.shadowBlur = 12
+        ctx.fillStyle = medalColors.bg
+        ctx.beginPath()
+        ctx.arc(badgeX + badgeSize/2, badgeY + badgeSize/2, badgeSize/2 - 5, 0, Math.PI * 2)
+        ctx.fill()
+        
+        ctx.fillStyle = medalColors.text
+        ctx.font = "700 28px 'Inter', system-ui, sans-serif"
+        ctx.textAlign = "center"
+        ctx.textBaseline = "middle"
+        ctx.fillText("P", badgeX + badgeSize/2, badgeY + badgeSize/2)
+        ctx.restore()
+      }
 
       // Content Area
-      const contentX = badgeX + badgeSize + 40
+      const contentX = badgeX + badgeSize + 30
       const contentCenterY = yPos + cardHeight / 2
       
-      // Participant Name
+      // Participant Name - Colored for 1st place, dark for others
       ctx.textAlign = "left"
-      ctx.fillStyle = "#fff"
-      ctx.font = isWinner ? "bold 52px system-ui, -apple-system, sans-serif" : "bold 44px system-ui, -apple-system, sans-serif"
+      ctx.textBaseline = "alphabetic"
+      
+      if (result.position === "1st") {
+        ctx.fillStyle = "#F5573B" // Coral/Orange for winner
+      } else {
+        ctx.fillStyle = "#1e293b" // Dark for others
+      }
+      ctx.font = "700 36px 'Inter', system-ui, -apple-system, sans-serif"
       const displayName = result.participant_name || "Team Entry"
-      ctx.fillText(truncateText(ctx, displayName, 550), contentX, contentCenterY - 15)
+      ctx.fillText(truncateText(ctx, displayName, 450), contentX, contentCenterY - 8)
       
-      // Team Info
-      const teamY = contentCenterY + 35
-      
-      // Team Color Pill
-      ctx.fillStyle = result.team.color + "20" // 20% opacity
-      roundRect(ctx, contentX, teamY - 20, 200, 40, 20)
-      ctx.fill()
-      
-      ctx.beginPath()
-      ctx.arc(contentX + 20, teamY, 8, 0, Math.PI * 2)
-      ctx.fillStyle = result.team.color
-      ctx.fill()
-      
-      ctx.fillStyle = result.team.color
-      ctx.font = "bold 24px system-ui, -apple-system, sans-serif"
-      ctx.fillText(result.team.name.toUpperCase(), contentX + 40, teamY + 8)
+      // Team/Department Info - Gray subtitle
+      ctx.fillStyle = "#94a3b8"
+      ctx.font = "400 22px 'Inter', system-ui, -apple-system, sans-serif"
+      ctx.fillText(result.team.name, contentX, contentCenterY + 22)
 
-      // Points (Right Side)
+      // Points (Right Side) - Simple +X format
       const pointsX = xPos + cardWidth - 50
       
       ctx.textAlign = "right"
-      ctx.fillStyle = isWinner ? "#fbbf24" : "#e2e8f0"
-      ctx.font = "900 56px system-ui, -apple-system, sans-serif"
-      ctx.fillText(`+${result.points}`, pointsX, contentCenterY + 10)
-      
+      ctx.textBaseline = "middle"
       ctx.fillStyle = "#64748b"
-      ctx.font = "500 20px system-ui, -apple-system, sans-serif"
-      ctx.fillText("POINTS", pointsX, contentCenterY + 40)
+      ctx.font = "600 36px 'Inter', system-ui, sans-serif"
+      ctx.fillText(`+${result.points}`, pointsX, contentCenterY)
 
-      yPos += cardHeight + 30
+      yPos += cardHeight + 20
     }
 
-    // Footer section
-    const footerY = height - 180
-    
-    // Stylish Divider
-    const dividerGrad = ctx.createLinearGradient(width/2 - 200, footerY, width/2 + 200, footerY)
-    dividerGrad.addColorStop(0, "transparent")
-    dividerGrad.addColorStop(0.5, "rgba(255,255,255,0.3)")
-    dividerGrad.addColorStop(1, "transparent")
-    ctx.fillStyle = dividerGrad
-    ctx.fillRect(width/2 - 200, footerY, 400, 2)
 
-    // Footer Logo/Text
-    ctx.textAlign = "center"
-    ctx.fillStyle = "#fff"
-    ctx.font = "bold 32px system-ui, -apple-system, sans-serif"
-    ctx.fillText("MCAS FEST 2025", width / 2, footerY + 60)
-    
-    ctx.fillStyle = "#64748b"
-    ctx.font = "24px system-ui, -apple-system, sans-serif"
-    ctx.fillText("Celebrating Excellence", width / 2, footerY + 100)
 
     // Convert to image
     const dataUrl = canvas.toDataURL("image/png")
@@ -383,115 +326,7 @@ export function ResultPoster({ data, onClose, onSaved }: ResultPosterProps) {
     setGenerating(false)
   }
 
-  const drawNoise = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    const imageData = ctx.getImageData(0, 0, width, height)
-    const data = imageData.data
-    for (let i = 0; i < data.length; i += 4) {
-      const noise = Math.random() * 10 - 5
-      data[i] = Math.max(0, Math.min(255, data[i] + noise))
-      data[i+1] = Math.max(0, Math.min(255, data[i+1] + noise))
-      data[i+2] = Math.max(0, Math.min(255, data[i+2] + noise))
-    }
-    ctx.putImageData(imageData, 0, 0)
-  }
 
-  const drawMedal = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, position: ResultPosition) => {
-    const colors = POSITION_COLORS[position]
-    const radius = size / 2
-    const centerX = x + radius
-    const centerY = y + radius
-
-    ctx.save()
-    
-    // Outer Ring/Glow
-    ctx.shadowColor = colors.glow
-    ctx.shadowBlur = 20
-    ctx.fillStyle = colors.bg
-    ctx.beginPath()
-    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
-    ctx.fill()
-    
-    // Inner Circle (Darker)
-    ctx.shadowBlur = 0
-    const innerGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius)
-    innerGrad.addColorStop(0, "#fff")
-    innerGrad.addColorStop(0.3, colors.bg)
-    innerGrad.addColorStop(1, "#000") // Dark edge
-    
-    ctx.fillStyle = innerGrad
-    ctx.beginPath()
-    ctx.arc(centerX, centerY, radius * 0.9, 0, Math.PI * 2)
-    ctx.fill()
-
-    // Center Circle (Lighter)
-    ctx.fillStyle = colors.bg
-    ctx.beginPath()
-    ctx.arc(centerX, centerY, radius * 0.8, 0, Math.PI * 2)
-    ctx.fill()
-
-    // Text/Emoji
-    ctx.textAlign = "center"
-    ctx.textBaseline = "middle"
-    
-    if (position === "participation") {
-      ctx.font = `${size * 0.5}px system-ui`
-      ctx.fillText("🎖️", centerX, centerY)
-    } else {
-      // Rank Number
-      ctx.fillStyle = "#000"
-      ctx.font = `bold ${size * 0.5}px system-ui`
-      ctx.fillText(position.replace(/\D/g, ''), centerX, centerY - size * 0.1)
-      
-      // Rank Suffix (st, nd, rd)
-      ctx.font = `bold ${size * 0.2}px system-ui`
-      ctx.fillText(position.replace(/\d/g, '').toUpperCase(), centerX, centerY + size * 0.25)
-    }
-
-    ctx.restore()
-  }
-
-  const drawDecorativeElements = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    // Dynamic curves
-    ctx.save()
-    ctx.globalAlpha = 0.1
-    
-    // Top curve
-    const grad1 = ctx.createLinearGradient(0, 0, width, 400)
-    grad1.addColorStop(0, "#4f46e5")
-    grad1.addColorStop(1, "transparent")
-    ctx.fillStyle = grad1
-    ctx.beginPath()
-    ctx.moveTo(0, 0)
-    ctx.lineTo(width, 0)
-    ctx.lineTo(width, 200)
-    ctx.bezierCurveTo(width/2, 400, width/4, 100, 0, 300)
-    ctx.fill()
-
-    // Bottom curve
-    const grad2 = ctx.createLinearGradient(0, height-400, width, height)
-    grad2.addColorStop(0, "transparent")
-    grad2.addColorStop(1, "#ec4899")
-    ctx.fillStyle = grad2
-    ctx.beginPath()
-    ctx.moveTo(0, height)
-    ctx.lineTo(width, height)
-    ctx.lineTo(width, height-300)
-    ctx.bezierCurveTo(width/2, height-500, width/4, height-100, 0, height-200)
-    ctx.fill()
-    
-    ctx.restore()
-
-    // Floating particles
-    ctx.fillStyle = "rgba(255, 255, 255, 0.15)"
-    for (let i = 0; i < 40; i++) {
-      const x = Math.random() * width
-      const y = Math.random() * height
-      const size = Math.random() * 3 + 1
-      ctx.beginPath()
-      ctx.arc(x, y, size, 0, Math.PI * 2)
-      ctx.fill()
-    }
-  }
 
   const savePosterToGallery = async () => {
     if (!imageUrl || saved) return
@@ -609,7 +444,7 @@ export function ResultPoster({ data, onClose, onSaved }: ResultPosterProps) {
               <p className="text-muted-foreground">Generating poster...</p>
             </div>
           ) : (
-            <div className="relative aspect-[9/16] rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+            <div className="relative aspect-square rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10">
               <img src={imageUrl} alt="Result Poster" className="w-full h-full object-contain" />
             </div>
           )}
