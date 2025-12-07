@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import Image from "next/image"
-import { Pencil, Trash2, X, Check, Loader2, Calendar, Clock, MapPin, Users, Mic, PenTool, Plus, RefreshCw } from "lucide-react"
+import { Pencil, Trash2, X, Check, Loader2, Calendar, Clock, MapPin, Users, Plus, RefreshCw } from "lucide-react"
 import type { DbEvent, CategoryType, EventType, EventStatus, StageType } from "@/lib/supabase/types"
 import { FEST_CONFIG } from "@/lib/supabase/types"
 
@@ -32,7 +31,6 @@ export function EventsManager() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<DbEvent>>({})
   const [showAddForm, setShowAddForm] = useState(false)
-  const [filterDay, setFilterDay] = useState<number | null>(null)
   const [filterStatus, setFilterStatus] = useState<EventStatus | null>(null)
   const [filterStage, setFilterStage] = useState<StageType | null>(null)
   const [filterCategory, setFilterCategory] = useState<CategoryType | null>(null)
@@ -40,7 +38,6 @@ export function EventsManager() {
   const [newEvent, setNewEvent] = useState<Partial<DbEvent>>({
     title: "",
     venue: "",
-    day: 1,
     time_slot: "10:00 AM",
     category: "ART",
     stage_type: "off-stage",
@@ -49,22 +46,12 @@ export function EventsManager() {
     registration_open: true,
     status: "upcoming",
     rules: "",
-    image: "",
   })
-
-  const fileToDataUrl = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(String(reader.result))
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
 
   const fetchEvents = useCallback(async (isRefresh = false) => {
     try {
       if (isRefresh) setRefreshing(true)
       const params = new URLSearchParams()
-      if (filterDay) params.set("day", filterDay.toString())
       if (filterStatus) params.set("status", filterStatus)
       if (filterStage) params.set("stage_type", filterStage)
       if (filterCategory) params.set("category", filterCategory)
@@ -79,7 +66,7 @@ export function EventsManager() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [filterDay, filterStatus, filterStage, filterCategory])
+  }, [filterStatus, filterStage, filterCategory])
 
   useEffect(() => {
     fetchEvents()
@@ -97,13 +84,10 @@ export function EventsManager() {
     if (editingId && editForm) {
       setSaving(true)
       try {
-        // Exclude status from update to prevent overwriting live status changes (e.g. completed by results)
-        const { status, ...updateData } = editForm
-
         const res = await fetch(`/api/events/${editingId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updateData),
+          body: JSON.stringify(editForm),
         })
         if (res.ok) {
           const updated = await res.json()
@@ -147,8 +131,6 @@ export function EventsManager() {
           setNewEvent({
             title: "",
             venue: "",
-            date: "",
-            day: 1,
             time_slot: "10:00 AM",
             category: "ART",
             stage_type: "off-stage",
@@ -157,7 +139,6 @@ export function EventsManager() {
             registration_open: true,
             status: "upcoming",
             rules: "",
-            image: "",
           })
           setShowAddForm(false)
         }
@@ -272,41 +253,6 @@ export function EventsManager() {
                   ))}
                 </select>
               </div>
-                  
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Image</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Image URL"
-                    value={newEvent.image || ""}
-                    onChange={(e) => setNewEvent({ ...newEvent, image: e.target.value })}
-                    className="flex-1 px-4 py-2 bg-secondary rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {  
-                        const f = e.target.files?.[0]
-                        if (f) {
-                          try {
-                            const dataUrl = await fileToDataUrl(f)
-                            setNewEvent({ ...newEvent, image: dataUrl })
-                          } catch (err) {
-                            console.error("Failed to read image file", err)
-                          }
-                        }
-                      }}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
-                    <button className="px-3 py-2 bg-secondary border border-border rounded-lg hover:bg-secondary/80">
-                      Upload
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <button
@@ -367,15 +313,9 @@ export function EventsManager() {
               key={event.id}
               className="bg-card rounded-xl border border-border overflow-hidden hover:border-accent/50 transition-colors"
             >
-              {/* Event Image */}
-              <div className="relative aspect-video bg-secondary">
-                <Image
-                  src={editingId === event.id ? editForm.image || event.image || "/placeholder.svg" : event.image || "/placeholder.svg"}
-                  alt={event.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute top-2 left-2 flex gap-2">
+              {/* Event Header */}
+              <div className="p-3 bg-secondary/50 border-b border-border">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                     event.category === "ART" ? "bg-purple-500/80 text-white" : "bg-green-500/80 text-white"
                   }`}>
@@ -386,11 +326,6 @@ export function EventsManager() {
                   }`}>
                     {event.stage_type === "on-stage" ? "🎤 On-Stage" : "📝 Off-Stage"}
                   </span>
-                </div>
-                <div className="absolute top-2 right-2 flex flex-col gap-1">
-                  <span className="px-2 py-1 text-xs font-bold bg-black/50 text-white rounded">
-                    Day {event.day}
-                  </span>
                   <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusBadge(event.status).color}`}>
                     {getStatusBadge(event.status).label}
                   </span>
@@ -400,29 +335,92 @@ export function EventsManager() {
               {/* Event Details */}
               <div className="p-4 space-y-3">
                 {editingId === event.id ? (
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={editForm.title || ""}
-                      onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                      className="w-full px-2 py-1 bg-secondary rounded border border-border text-sm"
-                      placeholder="Title"
-                    />
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Title</label>
+                      <input
+                        type="text"
+                        value={editForm.title || ""}
+                        onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                        className="w-full px-3 py-2 bg-secondary rounded-lg border border-border text-sm"
+                        placeholder="Event Title"
+                      />
+                    </div>
                     
-                    <input
-                      type="text"
-                      value={editForm.venue || ""}
-                      onChange={(e) => setEditForm({ ...editForm, venue: e.target.value })}
-                      className="w-full px-2 py-1 bg-secondary rounded border border-border text-xs"
-                      placeholder="Venue"
-                    />
-                    <input
-                      type="text"
-                      value={editForm.time_slot || ""}
-                      onChange={(e) => setEditForm({ ...editForm, time_slot: e.target.value })}
-                      className="w-full px-2 py-1 bg-secondary rounded border border-border text-xs"
-                      placeholder="Time Slot"
-                    />
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Venue</label>
+                      <input
+                        type="text"
+                        value={editForm.venue || ""}
+                        onChange={(e) => setEditForm({ ...editForm, venue: e.target.value })}
+                        className="w-full px-3 py-2 bg-secondary rounded-lg border border-border text-sm"
+                        placeholder="Venue"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Time</label>
+                      <input
+                        type="text"
+                        value={editForm.time_slot || ""}
+                        onChange={(e) => setEditForm({ ...editForm, time_slot: e.target.value })}
+                        className="w-full px-3 py-2 bg-secondary rounded-lg border border-border text-sm"
+                        placeholder="Time Slot (e.g. 10:00 AM)"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Category</label>
+                      <select
+                        value={editForm.category || "ART"}
+                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value as CategoryType })}
+                        className="w-full px-3 py-2 bg-secondary rounded-lg border border-border text-sm"
+                      >
+                        <option value="ART">🎨 Arts</option>
+                        <option value="SPORTS">⚽ Sports</option>
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Type</label>
+                        <select
+                          value={editForm.stage_type || "off-stage"}
+                          onChange={(e) => setEditForm({ ...editForm, stage_type: e.target.value as StageType })}
+                          className="w-full px-3 py-2 bg-secondary rounded-lg border border-border text-sm"
+                        >
+                          {STAGE_TYPES.map((s) => (
+                            <option key={s.value} value={s.value}>{s.icon} {s.label}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Mode</label>
+                        <select
+                          value={editForm.event_type || "individual"}
+                          onChange={(e) => setEditForm({ ...editForm, event_type: e.target.value as EventType })}
+                          className="w-full px-3 py-2 bg-secondary rounded-lg border border-border text-sm"
+                        >
+                          {EVENT_TYPES.map((t) => (
+                            <option key={t.value} value={t.value}>{t.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Status</label>
+                      <select
+                        value={editForm.status || "upcoming"}
+                        onChange={(e) => setEditForm({ ...editForm, status: e.target.value as EventStatus })}
+                        className="w-full px-3 py-2 bg-secondary rounded-lg border border-border text-sm"
+                      >
+                        {EVENT_STATUSES.map((s) => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 ) : (
                   <>

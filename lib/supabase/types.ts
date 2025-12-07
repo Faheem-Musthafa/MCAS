@@ -97,6 +97,20 @@ export interface DbScoringCriteria {
   created_at: string
 }
 
+// Poster for result announcements
+export interface DbPoster {
+  id: string
+  event_id: string
+  src: string
+  title: string
+  created_at: string
+  updated_at: string
+}
+
+export interface DbPosterWithEvent extends DbPoster {
+  event?: DbEvent
+}
+
 // Announcement for live updates
 export interface DbAnnouncement {
   id: string

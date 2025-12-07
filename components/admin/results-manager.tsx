@@ -354,7 +354,7 @@ export function ResultsManager() {
                 <option value="">Choose an event ({events.length} available)</option>
                 {events.map((event) => (
                   <option key={event.id} value={event.id}>
-                    {event.title} - Day {event.day}
+                    {event.title}
                   </option>
                 ))}
               </select>
@@ -632,7 +632,6 @@ export function ResultsManager() {
                     <div>
                       <h4 className="font-bold text-lg">{event.title}</h4>
                       <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <span className="px-2 py-0.5 bg-secondary rounded-md">Day {event.day}</span>
                         <span>•</span>
                         <span>{event.venue}</span>
                         <span>•</span>

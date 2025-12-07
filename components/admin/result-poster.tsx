@@ -333,28 +333,14 @@ export function ResultPoster({ data, onClose, onSaved }: ResultPosterProps) {
     
     setSaving(true)
     try {
-      // Check for existing poster
-      const checkRes = await fetch(`/api/gallery?type=poster`)
-      if (checkRes.ok) {
-        const existingPosters = await checkRes.json()
-        const existing = existingPosters.find((p: any) => p.event_id === event.id)
-        if (existing) {
-          // Delete existing poster first
-          await fetch(`/api/gallery/${existing.id}`, { method: "DELETE" })
-        }
-      }
-
-      // Save new poster
-      const res = await fetch("/api/gallery", {
+      // Save to posters table (will update if exists for this event)
+      const res = await fetch("/api/posters", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          event_id: event.id,
           src: imageUrl,
           title: `${event.title} - Result`,
-          event_id: event.id,
-          day: event.day,
-          type: "poster",
-          span: "col-span-1 row-span-2",
         }),
       })
 

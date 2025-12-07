@@ -2,7 +2,9 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Lock, User, Eye, EyeOff, ShieldCheck, Sparkles } from "lucide-react"
+import Image from "next/image"
+import { Loader2, Lock, User, Eye, EyeOff } from "lucide-react"
+import { FEST_CONFIG } from "@/lib/supabase/types"
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -38,69 +40,86 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-radial-pastel">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-[#0a0015] via-[#030014] to-[#000510]">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="blob blob-pink absolute top-20 -left-20 w-[300px] h-[300px] opacity-40" style={{ animationDelay: '0s' }} />
-        <div className="blob blob-blue absolute bottom-20 -right-20 w-[350px] h-[350px] opacity-40" style={{ animationDelay: '2s' }} />
-        <div className="blob blob-purple absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] opacity-30" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#7928CA]/20 blur-[100px]" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#0070F3]/15 blur-[100px]" />
+        <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] rounded-full bg-[#FF0080]/10 blur-[80px]" />
       </div>
 
       <div className="relative w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 glass-card rounded-3xl mb-4">
-            <ShieldCheck className="w-10 h-10 text-[var(--art-accent)]" />
+          {/* Logo */}
+          <div className="relative inline-block mb-6">
+            {/* Glow effect */}
+            <div className="absolute -inset-4 bg-gradient-to-r from-[#FF0080]/30 via-[#7928CA]/30 to-[#0070F3]/30 blur-2xl rounded-full" />
+            
+            {/* Gradient border */}
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[#FF0080] via-[#7928CA] to-[#0070F3] opacity-70" />
+            
+            {/* Logo container */}
+            <div className="relative w-24 h-24 rounded-xl bg-slate-900 overflow-hidden">
+              <Image
+                src="/ibda.png"
+                alt="IBDA Logo"
+                fill
+                className="object-contain p-3"
+                priority
+              />
+            </div>
           </div>
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Sparkles size={20} className="text-[var(--art-accent)]" />
-            <span className="text-xl font-bold gradient-text">Artistry 2025</span>
-          </div>
-          <h1 className="text-3xl font-bold text-[var(--art-text)]">Admin Login</h1>
-          <p className="text-[var(--art-text-light)] mt-2">Control Panel Access</p>
+          
+          {/* Title */}
+          <h1 className="text-3xl font-black text-white tracking-tight mb-1">
+            {FEST_CONFIG.name}
+          </h1>
+          <p className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF0080] via-[#7928CA] to-[#0070F3] font-bold text-lg">
+            Admin Panel
+          </p>
+          <p className="text-white/40 text-sm mt-2">Control Panel Access</p>
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleLogin} className="glass-card rounded-3xl p-8 space-y-6">
+        <form onSubmit={handleLogin} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 md:p-8 space-y-5">
           {error && (
-            <div className="p-3 rounded-xl text-sm text-center" style={{ background: 'rgba(255, 107, 107, 0.2)', border: '1px solid rgba(255, 107, 107, 0.4)', color: '#ff6b6b' }}>
+            <div className="p-3 rounded-xl text-sm text-center bg-red-500/20 border border-red-500/30 text-red-400">
               {error}
             </div>
           )}
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[var(--art-text-light)]">Username</label>
+            <label className="text-sm font-medium text-white/60">Username</label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--art-text-light)]" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter username"
                 required
-                className="w-full pl-11 pr-4 py-3 rounded-xl border text-[var(--art-text)] placeholder:text-[var(--art-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--art-accent)] transition-all"
-                style={{ background: 'rgba(255, 255, 255, 0.7)', borderColor: 'rgba(0, 0, 0, 0.1)' }}
+                className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#7928CA] focus:border-transparent transition-all"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[var(--art-text-light)]">Password</label>
+            <label className="text-sm font-medium text-white/60">Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--art-text-light)]" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
                 required
-                className="w-full pl-11 pr-12 py-3 rounded-xl border text-[var(--art-text)] placeholder:text-[var(--art-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--art-accent)] transition-all"
-                style={{ background: 'rgba(255, 255, 255, 0.7)', borderColor: 'rgba(0, 0, 0, 0.1)' }}
+                className="w-full pl-11 pr-12 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#7928CA] focus:border-transparent transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--art-text-light)] hover:text-[var(--art-text)] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -110,24 +129,30 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={loading || !username || !password}
-            className="w-full py-3 btn-pastel-pink font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="group relative w-full py-3 font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 overflow-hidden"
           >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              <>
-                <Lock className="w-5 h-5" />
-                Sign In
-              </>
-            )}
+            {/* Button gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#FF0080] via-[#7928CA] to-[#0070F3]" />
+            
+            {/* Content */}
+            <span className="relative flex items-center gap-2 text-white">
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <Lock className="w-5 h-5" />
+                  Sign In
+                </>
+              )}
+            </span>
           </button>
         </form>
 
         {/* Footer */}
-        <p className="text-center text-[var(--art-text-light)] text-sm mt-6">
+        <p className="text-center text-white/30 text-sm mt-6">
           Protected area. Authorized personnel only.
         </p>
       </div>
