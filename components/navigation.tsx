@@ -55,11 +55,11 @@ export function Navigation() {
     <>
       <nav
         className={cn(
-          "fixed top-3 sm:top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 w-[calc(100%-1.5rem)] sm:w-auto max-w-md sm:max-w-none",
+          "fixed top-3 sm:top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 w-[calc(100%-1.5rem)] sm:w-auto max-w-md sm:max-w-none touch-feedback",
           scrolled 
-            ? "bg-white/80 dark:bg-slate-900/80 shadow-2xl shadow-black/10 scale-[0.98]" 
-            : "bg-white/60 dark:bg-slate-900/60 shadow-xl shadow-black/5",
-          "backdrop-blur-xl border border-white/30 dark:border-white/10",
+            ? "bg-white/85 dark:bg-slate-900/85 shadow-2xl shadow-black/10 scale-[0.98]" 
+            : "bg-white/70 dark:bg-slate-900/70 shadow-xl shadow-black/5",
+          "backdrop-blur-lg md:backdrop-blur-xl border border-white/40 dark:border-white/10",
           "px-2 sm:px-3 py-2 sm:py-2.5 rounded-2xl sm:rounded-full"
         )}
       >
@@ -145,14 +145,14 @@ export function Navigation() {
       {/* Mobile Menu - Full Screen Overlay */}
       <div 
         className={cn(
-          "fixed inset-0 z-40 md:hidden transition-all duration-500",
+          "fixed inset-0 z-40 md:hidden transition-all duration-300 safe-area-inset",
           mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
       >
         {/* Backdrop */}
         <div 
           className={cn(
-            "absolute inset-0 bg-[var(--background)]/80 backdrop-blur-xl transition-opacity duration-500",
+            "absolute inset-0 bg-[var(--background)]/90 backdrop-blur-lg transition-opacity duration-300",
             mobileOpen ? "opacity-100" : "opacity-0"
           )}
           onClick={() => setMobileOpen(false)}
@@ -161,12 +161,12 @@ export function Navigation() {
         {/* Menu Content */}
         <div 
           className={cn(
-            "absolute inset-x-3 top-20 transition-all duration-500 ease-out",
-            mobileOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-8"
+            "absolute inset-x-3 top-20 transition-all duration-400 ease-out gpu-accelerated",
+            mobileOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
           )}
         >
           {/* Glass Card Menu */}
-          <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl rounded-3xl border border-white/40 dark:border-white/10 shadow-2xl shadow-black/10 overflow-hidden">
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg rounded-3xl border border-white/50 dark:border-white/10 shadow-2xl shadow-black/10 overflow-hidden">
             {/* Header */}
             <div className="px-6 py-5 border-b border-white/20 dark:border-white/5">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Navigation</p>
@@ -221,6 +221,7 @@ export function Navigation() {
                     <span className="text-xs text-muted-foreground">
                       {item.id === 'events' && 'Browse all events'}
                       {item.id === 'scoreboard' && 'Live team standings'}
+                      {item.id === 'results' && 'Event result posters'}
                       {item.id === 'gallery' && 'Photos & memories'}
                     </span>
                   </div>

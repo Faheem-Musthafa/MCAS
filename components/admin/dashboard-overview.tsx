@@ -105,48 +105,21 @@ export function DashboardOverview() {
       <div className="p-6 bg-gradient-to-r from-accent/20 via-accent/10 to-transparent rounded-2xl border border-accent/20">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">{FEST_CONFIG.name}</h1>
+            <h1 className="text-2xl font-bold">{FEST_CONFIG.name} Admin Panel</h1>
             <p className="text-muted-foreground">{FEST_CONFIG.fullName}</p>
             <p className="text-sm text-muted-foreground mt-1">
               {FEST_CONFIG.department} • {FEST_CONFIG.studentUnion}
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <button
+            {/* <button
               onClick={() => fetchData(true)}
               disabled={refreshing}
               className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
               title="Refresh data"
             >
               <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-            </button>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-accent">{festProgress}%</div>
-              <div className="text-xs text-muted-foreground">Fest Progress</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold">{stats.totalEvents}</div>
-              <div className="text-xs text-muted-foreground">Events</div>
-            </div>
-          </div>
-        </div>
-        {/* Progress Bar */}
-        <div className="mt-4">
-          <div className="h-2 bg-secondary rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-accent rounded-full transition-all duration-500"
-              style={{ width: `${festProgress}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-            <span>{stats.completedEvents} completed</span>
-            {lastUpdated && (
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                Live • Updated {lastUpdated.toLocaleTimeString()}
-              </span>
-            )}
-            <span>{stats.upcomingEvents} remaining</span>
+            </button> */}
           </div>
         </div>
       </div>
@@ -239,46 +212,6 @@ export function DashboardOverview() {
         </div>
 
         {/* Today's Events */}
-        <div className="lg:col-span-2 bg-card rounded-xl border border-border overflow-hidden">
-          <div className="p-4 border-b border-border flex items-center gap-2">
-            <Clock size={18} className="text-accent" />
-            <h2 className="font-semibold">Upcoming Events</h2>
-          </div>
-          <div className="divide-y divide-border">
-            {todayEvents.map((event) => (
-              <div key={event.id} className="p-4 flex items-center gap-4">
-                <div className={`p-3 rounded-lg ${
-                  event.status === "ongoing" ? "bg-green-500/10 text-green-500" : "bg-blue-500/10 text-blue-500"
-                }`}>
-                  {event.status === "ongoing" ? <PlayCircle size={20} /> : <Calendar size={20} />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{event.title}</span>
-                    <span className={`px-2 py-0.5 text-xs rounded-full ${
-                      event.category === "ART" ? "bg-purple-500/10 text-purple-500" : "bg-green-500/10 text-green-500"
-                    }`}>
-                      {event.category}
-                    </span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Day {event.day} • {event.venue} • {event.time_slot}
-                  </div>
-                </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  event.status === "ongoing" ? "bg-green-500/10 text-green-500 animate-pulse" : "bg-blue-500/10 text-blue-500"
-                }`}>
-                  {event.status === "ongoing" ? "🔴 LIVE" : "Upcoming"}
-                </span>
-              </div>
-            ))}
-            {todayEvents.length === 0 && (
-              <div className="p-8 text-center text-muted-foreground text-sm">
-                No upcoming events
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* Recent Results */}
@@ -306,31 +239,6 @@ export function DashboardOverview() {
           </div>
         </div>
       )}
-
-      {/* Event Status Summary */}
-      <div className="grid sm:grid-cols-3 gap-4">
-        <div className="p-4 bg-green-500/5 border border-green-500/20 rounded-xl flex items-center gap-3">
-          <CheckCircle2 className="text-green-500" size={24} />
-          <div>
-            <div className="text-2xl font-bold text-green-500">{stats.completedEvents}</div>
-            <div className="text-sm text-muted-foreground">Completed</div>
-          </div>
-        </div>
-        <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl flex items-center gap-3">
-          <PlayCircle className="text-blue-500" size={24} />
-          <div>
-            <div className="text-2xl font-bold text-blue-500">{stats.ongoingEvents}</div>
-            <div className="text-sm text-muted-foreground">Ongoing</div>
-          </div>
-        </div>
-        <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl flex items-center gap-3">
-          <Clock className="text-amber-500" size={24} />
-          <div>
-            <div className="text-2xl font-bold text-amber-500">{stats.upcomingEvents}</div>
-            <div className="text-sm text-muted-foreground">Upcoming</div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

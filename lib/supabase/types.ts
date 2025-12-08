@@ -227,16 +227,15 @@ export const FEST_CONFIG = {
   Created : "Faheem Musthafa",
   // College departments for team registration
   departments: [
-    "Computer Science",
+    "BCA",
     "Electronics",
-    "Mechanical",
-    "Civil",
-    "Electrical",
-    "Information Technology",
-    "Commerce",
-    "Management",
-    "Arts",
-    "Science",
+    "BBA",
+    "Psychology",
+    "Bcom CA",
+    "Bcom TT",
+    "Multimedia",
+    "Economics",
+    "BA Engilsh"
   ],
   // Scoring system
   scoring: {

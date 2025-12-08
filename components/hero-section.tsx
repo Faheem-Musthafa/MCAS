@@ -16,12 +16,12 @@ export function HeroSection() {
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-transparent">
-      {/* Simplified Background - No heavy animations */}
+      {/* Simplified Background - No heavy animations, reduced on mobile */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Static Gradient Orbs - reduced blur for mobile performance */}
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[var(--art-purple)]/15 blur-[80px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[var(--art-blue)]/15 blur-[80px]" />
-        <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[40%] h-[40%] rounded-full bg-[var(--art-pink)]/10 blur-[60px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[var(--art-purple)]/15 blur-[40px] md:blur-[80px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[var(--art-blue)]/15 blur-[40px] md:blur-[80px]" />
+        <div className="hidden md:block absolute top-[40%] left-[50%] -translate-x-1/2 w-[40%] h-[40%] rounded-full bg-[var(--art-pink)]/10 blur-[60px]" />
       </div>
 
       {/* Content */}
@@ -119,7 +119,7 @@ export function HeroSection() {
 
             {/* Logos Section - Ujjwalam X Polika */}
             <div 
-              className={`flex flex-row items-center justify-center gap-4 sm:gap-8 md:gap-16 mb-12 transition-all duration-500 ease-out ${
+              className={`flex flex-row items-center justify-center gap-3 sm:gap-8 md:gap-16 mb-10 md:mb-12 transition-all duration-500 ease-out ${
                 mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
               style={{ transitionDelay: '200ms' }}
@@ -127,35 +127,35 @@ export function HeroSection() {
               
               {/* Ujjwalam Logo */}
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-tr from-[var(--art-pink)]/30 to-[var(--art-purple)]/30 blur-[40px] rounded-full opacity-50" />
-                <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-44 md:h-44 lg:w-56 lg:h-56">
+                <div className="hidden md:block absolute inset-0 bg-gradient-to-tr from-[var(--art-pink)]/30 to-[var(--art-purple)]/30 blur-[40px] rounded-full opacity-50" />
+                <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-44 md:h-44 lg:w-56 lg:h-56">
                   <Image
                     src="/ujjwalam.png"
                     alt="Ujjwalam Logo"
                     fill
                     className="object-contain"
                     priority
-                    sizes="(max-width: 640px) 96px, (max-width: 768px) 128px, (max-width: 1024px) 176px, 224px"
+                    sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, (max-width: 1024px) 176px, 224px"
                   />
                 </div>
               </div>
 
               {/* The X */}
               <div className="flex items-center justify-center">
-                <span className="text-4xl sm:text-5xl md:text-7xl font-black text-slate-200 select-none">X</span>
+                <span className="text-3xl sm:text-5xl md:text-7xl font-black text-slate-200 select-none">X</span>
               </div>
 
               {/* Polika Logo */}
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-tl from-[var(--art-blue)]/30 to-[var(--art-green)]/30 blur-[40px] rounded-full opacity-50" />
-                <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-44 md:h-44 lg:w-56 lg:h-56">
+                <div className="hidden md:block absolute inset-0 bg-gradient-to-tl from-[var(--art-blue)]/30 to-[var(--art-green)]/30 blur-[40px] rounded-full opacity-50" />
+                <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-44 md:h-44 lg:w-56 lg:h-56">
                   <Image
                     src="/polika.png"
                     alt="Polika Logo"
                     fill
                     className="object-contain"
                     priority
-                    sizes="(max-width: 640px) 96px, (max-width: 768px) 128px, (max-width: 1024px) 176px, 224px"
+                    sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, (max-width: 1024px) 176px, 224px"
                   />
                 </div>
               </div>

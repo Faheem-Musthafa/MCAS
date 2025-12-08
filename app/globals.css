@@ -635,3 +635,287 @@
   animation-delay: 3s;
 }
 
+/* =============================================== */
+/* MOBILE OPTIMIZATIONS - Performance & UX        */
+/* =============================================== */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mobile performance optimizations */
+@media (max-width: 768px) {
+  /* Reduce blur effects for better performance */
+  .glass,
+  .glass-card {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  /* Reduce blob blur on mobile */
+  .blob {
+    filter: blur(30px);
+  }
+  
+  /* Disable heavy animations on mobile */
+  .animate-blob {
+    animation: none;
+  }
+  
+  /* Simplify floating animations */
+  .animate-float-gentle {
+    animation-duration: 6s;
+  }
+  
+  /* Reduce gradients complexity */
+  .bg-radial-pastel {
+    background: radial-gradient(circle at 30% 70%, rgba(255, 209, 220, 0.3) 0%, transparent 50%),
+                var(--background);
+  }
+  
+  /* Optimize scrollbar for touch */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  /* Better touch targets */
+  button, 
+  a, 
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve text readability on mobile */
+  .gradient-text {
+    font-weight: 800;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  /* Even lighter blur for small devices */
+  .glass,
+  .glass-card {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+  
+  /* Reduce hover effects that don't apply on touch */
+  .hover-lift:hover {
+    transform: none;
+  }
+  
+  /* Smaller glow effects */
+  .glow-pink,
+  .glow-blue,
+  .glow-purple,
+  .glow-green {
+    box-shadow: 0 0 20px rgba(255, 143, 171, 0.3);
+  }
+}
+
+/* =============================================== */
+/* DESKTOP ENHANCEMENTS - Rich interactions       */
+/* =============================================== */
+
+@media (min-width: 1024px) {
+  /* Enhanced hover states */
+  .glass-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .glass-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  }
+  
+  /* Magnetic button effect */
+  .btn-magnetic {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .btn-magnetic:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Smooth link underlines */
+  .link-fancy {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .link-fancy::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--art-pink), var(--art-purple), var(--art-blue));
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .link-fancy:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  
+  /* 3D card tilt effect */
+  .card-3d {
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+  
+  .card-3d:hover {
+    transform: perspective(1000px) rotateX(2deg) rotateY(-2deg);
+  }
+  
+  /* Gradient border animation */
+  @keyframes gradient-rotate {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  .animated-border {
+    background: linear-gradient(90deg, var(--art-pink), var(--art-purple), var(--art-blue), var(--art-green), var(--art-pink));
+    background-size: 300% 100%;
+    animation: gradient-rotate 4s ease infinite;
+  }
+  
+  /* Enhanced glow on hover */
+  .glow-hover {
+    transition: box-shadow 0.4s ease;
+  }
+  
+  .glow-hover:hover {
+    box-shadow: 0 0 30px rgba(255, 143, 171, 0.5), 
+                0 0 60px rgba(230, 206, 242, 0.3),
+                0 20px 40px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Text reveal animation */
+  .text-reveal {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .text-reveal::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, var(--background), transparent);
+    animation: text-reveal-slide 1.5s ease-out forwards;
+  }
+  
+  @keyframes text-reveal-slide {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  
+  /* Hover image zoom */
+  .img-zoom {
+    overflow: hidden;
+  }
+  
+  .img-zoom img {
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .img-zoom:hover img {
+    transform: scale(1.08);
+  }
+}
+
+/* =============================================== */
+/* RESPONSIVE TYPOGRAPHY                          */
+/* =============================================== */
+
+/* Fluid typography */
+.text-fluid-sm {
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+}
+
+.text-fluid-base {
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.text-fluid-lg {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+}
+
+.text-fluid-xl {
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+}
+
+.text-fluid-2xl {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+}
+
+.text-fluid-3xl {
+  font-size: clamp(1.875rem, 5vw, 3rem);
+}
+
+.text-fluid-4xl {
+  font-size: clamp(2.25rem, 6vw, 3.75rem);
+}
+
+.text-fluid-5xl {
+  font-size: clamp(3rem, 8vw, 4.5rem);
+}
+
+/* =============================================== */
+/* TOUCH-FRIENDLY UTILITIES                       */
+/* =============================================== */
+
+/* Improved touch feedback */
+.touch-feedback {
+  -webkit-tap-highlight-color: rgba(255, 143, 171, 0.2);
+  touch-action: manipulation;
+}
+
+/* Safe area padding for notched devices */
+.safe-area-inset {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Hardware acceleration for smooth animations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Content visibility for performance */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+

@@ -72,36 +72,36 @@ export function EventsSection() {
 
 
   return (
-    <section id="events" className="py-24 px-6 relative overflow-hidden bg-transparent">
-      {/* Floating elements for seamless feel */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <section id="events" className="py-16 md:py-24 px-4 md:px-6 relative overflow-hidden bg-transparent">
+      {/* Floating elements for seamless feel - hidden on mobile for performance */}
+      <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 -right-20 w-[350px] h-[350px] rounded-full bg-[var(--art-yellow)]/20 blur-[80px] animate-float-gentle" />
         <div className="absolute bottom-20 -left-20 w-[300px] h-[300px] rounded-full bg-[var(--art-green)]/20 blur-[80px] animate-float-gentle animation-delay-2000" />
       </div>
       
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
-        <div className="text-center mb-14">
-          <span className="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold glass-card rounded-full mb-5 shadow-lg">
-            <Calendar size={16} className="text-[var(--art-accent)]" />
+        <div className="text-center mb-10 md:mb-14">
+          <span className="inline-flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-semibold glass-card rounded-full mb-4 md:mb-5 shadow-lg">
+            <Calendar size={14} className="text-[var(--art-accent)]" />
             Event Schedule
           </span>
-          <h2 className="text-4xl md:text-6xl font-black tracking-tight text-foreground mb-3">
+          <h2 className="text-3xl md:text-4xl lg:text-6xl font-black tracking-tight text-foreground mb-2 md:mb-3">
             Event <span className="gradient-text">Schedule</span>
           </h2>
-          <p className="text-muted-foreground max-w-lg mx-auto">
+          <p className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto">
             Discover exciting events across arts and sports categories
           </p>
         </div>
 
-        {/* Day Filter - Dynamic */}
+        {/* Day Filter - Dynamic - scrollable on mobile */}
         {availableDays.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-2 mb-6">
+          <div className="flex overflow-x-auto no-scrollbar justify-start md:justify-center gap-2 mb-5 md:mb-6 -mx-4 px-4 md:mx-0 md:px-0 pb-2">
             {availableDays.map((day) => (
               <button
                 key={day}
                 onClick={() => setSelectedDay(day)}
-                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
+                className={`flex-shrink-0 px-4 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-bold transition-all duration-300 touch-feedback ${
                   selectedDay === day
                     ? "bg-gradient-to-r from-[var(--art-pink)] to-[var(--art-purple)] text-white shadow-lg"
                     : "glass-card hover:bg-white/70 text-muted-foreground hover:text-foreground"
@@ -113,8 +113,8 @@ export function EventsSection() {
           </div>
         )}
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-3 mb-4">
+        {/* Category Filter - scrollable on mobile */}
+        <div className="flex overflow-x-auto no-scrollbar justify-start md:justify-center gap-2 md:gap-3 mb-4 -mx-4 px-4 md:mx-0 md:px-0 pb-2">
           {[
             { key: "ALL", label: "All Events", emoji: "✨" },
             { key: "ART", label: "Arts", emoji: "🎨" },
@@ -123,7 +123,7 @@ export function EventsSection() {
             <button
               key={cat.key}
               onClick={() => setSelectedCategory(cat.key)}
-              className={`group relative px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 overflow-hidden ${
+              className={`flex-shrink-0 group relative px-4 md:px-6 py-2.5 md:py-3 rounded-2xl text-xs md:text-sm font-bold transition-all duration-300 overflow-hidden touch-feedback ${
                 selectedCategory === cat.key
                   ? "text-foreground shadow-lg"
                   : "glass-card hover:shadow-md text-muted-foreground hover:text-foreground"
@@ -138,7 +138,7 @@ export function EventsSection() {
                   : undefined 
               }}
             >
-              <span className="relative flex items-center gap-2">
+              <span className="relative flex items-center gap-1.5 md:gap-2">
                 <span>{cat.emoji}</span>
                 <span>{cat.label}</span>
               </span>
@@ -146,8 +146,8 @@ export function EventsSection() {
           ))}
         </div>
 
-        {/* Stage Type Filter */}
-        <div className="flex justify-center gap-3 mb-10">
+        {/* Stage Type Filter - scrollable on mobile */}
+        <div className="flex overflow-x-auto no-scrollbar justify-start md:justify-center gap-2 md:gap-3 mb-8 md:mb-10 -mx-4 px-4 md:mx-0 md:px-0 pb-2">
           {[
             { key: "ALL", label: "All Types", emoji: "🌟" },
             { key: "on-stage", label: "On-Stage", emoji: "🎤" },
@@ -156,7 +156,7 @@ export function EventsSection() {
             <button
               key={stage.key}
               onClick={() => setSelectedStage(stage.key)}
-              className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+              className={`flex-shrink-0 px-4 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all duration-300 touch-feedback ${
                 selectedStage === stage.key
                   ? "bg-gradient-to-r from-[var(--art-blue)] to-[var(--art-green)] text-foreground shadow-md"
                   : "glass-card hover:bg-white/70 text-muted-foreground hover:text-foreground"
@@ -187,7 +187,7 @@ export function EventsSection() {
             </p>
           </div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-4 md:space-y-5">
             {sortedEvents.map((event, index) => {
               const status = statusConfig[event.status] || statusConfig.upcoming
               const StatusIcon = status.icon
@@ -196,8 +196,8 @@ export function EventsSection() {
               return (
                 <div
                   key={event.id}
-                  className="group glass-card rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 animate-slide-up"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className="group glass-card rounded-2xl md:rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 animate-slide-up touch-feedback"
+                  style={{ animationDelay: `${Math.min(index * 30, 200)}ms` }}
                 >
                   {/* Live indicator bar */}
                   {event.status === 'ongoing' && (
@@ -205,24 +205,25 @@ export function EventsSection() {
                   )}
 
                   <div className="flex flex-col md:flex-row">
-                    {/* Image */}
+                    {/* Image - smaller on mobile */}
                     {event.image && (
-                      <div className="relative w-full md:w-56 h-44 md:h-auto flex-shrink-0 overflow-hidden">
+                      <div className="relative w-full md:w-56 h-36 md:h-auto flex-shrink-0 overflow-hidden img-zoom">
                         <Image
                           src={event.image}
                           alt={event.title}
                           fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-700"
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 224px"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                     )}
 
                     {/* Content */}
-                    <div className="flex-1 p-6 flex flex-col md:flex-row md:items-center gap-5">
+                    <div className="flex-1 p-4 md:p-6 flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
                       {/* Time */}
-                      <div className="flex-shrink-0 text-center md:text-left md:w-28">
-                        <div className="text-3xl font-black gradient-text tracking-tight">{event.time_slot?.split(" ")[0] || "TBA"}</div>
+                      <div className="flex md:flex-col items-center md:items-start gap-2 md:text-left md:w-28">
+                        <div className="text-2xl md:text-3xl font-black gradient-text tracking-tight">{event.time_slot?.split(" ")[0] || "TBA"}</div>
                         <div className="text-xs text-muted-foreground font-medium">{event.time_slot?.split(" ")[1] || ""}</div>
                       </div>
 
@@ -231,15 +232,16 @@ export function EventsSection() {
 
                       {/* Details */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                        {/* Badges - scrollable on mobile */}
+                        <div className="flex flex-wrap gap-1.5 md:gap-2 mb-2 md:mb-3">
                           <span 
-                            className="px-3 py-1.5 text-xs font-bold rounded-full shadow-sm"
+                            className="px-2.5 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-bold rounded-full shadow-sm"
                             style={{ background: categoryStyle.bg, color: categoryStyle.text }}
                           >
                             {event.category === "ART" ? "🎨" : "🏆"} {event.category}
                           </span>
                           <span 
-                            className="px-3 py-1.5 text-xs font-medium rounded-full shadow-sm"
+                            className="px-2.5 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-medium rounded-full shadow-sm"
                             style={{ 
                               background: event.stage_type === "on-stage" 
                                 ? 'rgba(255, 245, 186, 0.9)' 
@@ -247,40 +249,35 @@ export function EventsSection() {
                               color: 'var(--foreground)'
                             }}
                           >
-                            {event.stage_type === "on-stage" ? "🎤 On-Stage" : "📝 Off-Stage"}
+                            {event.stage_type === "on-stage" ? "🎤" : "📝"} <span className="hidden sm:inline">{event.stage_type === "on-stage" ? "On-Stage" : "Off-Stage"}</span>
                           </span>
                           <span 
-                            className={`px-3 py-1.5 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-sm ${status.pulse ? 'animate-pulse' : ''}`}
+                            className={`px-2.5 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-bold rounded-full flex items-center gap-1 shadow-sm ${status.pulse ? 'animate-pulse' : ''}`}
                             style={{ background: status.bg, color: 'var(--foreground)' }}
                           >
-                            <StatusIcon size={12} />
+                            <StatusIcon size={10} />
                             {status.label}
                           </span>
-                          {event.event_type && (
-                            <span className="px-3 py-1.5 text-xs font-medium rounded-full capitalize shadow-sm" style={{ background: 'rgba(255, 255, 255, 0.7)' }}>
-                              {event.event_type}
-                            </span>
-                          )}
                         </div>
-                        <h3 className="text-xl font-bold mb-2 text-foreground group-hover:gradient-text transition-all duration-300">{event.title}</h3>
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1.5">
-                            <MapPin size={14} className="text-[var(--art-accent)]" /> {event.venue}
+                        <h3 className="text-lg md:text-xl font-bold mb-1.5 md:mb-2 text-foreground group-hover:gradient-text transition-all duration-300 line-clamp-1">{event.title}</h3>
+                        <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs md:text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <MapPin size={12} className="text-[var(--art-accent)]" /> {event.venue}
                           </span>
                           {event.participant_limit && (
-                            <span className="flex items-center gap-1.5">
-                              <Users size={14} className="text-[var(--art-accent)]" /> {event.participant_limit} participants
+                            <span className="hidden sm:flex items-center gap-1">
+                              <Users size={12} className="text-[var(--art-accent)]" /> {event.participant_limit} max
                             </span>
                           )}
                         </div>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex gap-3 md:flex-shrink-0">
-                        <button className="group/btn relative px-6 py-3 text-sm font-bold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" style={{ background: 'linear-gradient(135deg, var(--art-blue), var(--art-green))' }}>
+                      <div className="flex gap-2 md:gap-3 md:flex-shrink-0 mt-2 md:mt-0">
+                        <button className="group/btn flex-1 md:flex-none relative px-4 md:px-6 py-2.5 md:py-3 text-xs md:text-sm font-bold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 lg:hover:scale-105" style={{ background: 'linear-gradient(135deg, var(--art-blue), var(--art-green))' }}>
                           <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
-                          <span className="relative flex items-center gap-2 text-foreground">
-                            Details <ArrowRight size={14} />
+                          <span className="relative flex items-center justify-center gap-1.5 md:gap-2 text-foreground">
+                            Details <ArrowRight size={12} />
                           </span>
                         </button>
                       </div>
