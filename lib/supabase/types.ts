@@ -8,14 +8,6 @@ export type EventType = "individual" | "group" | "team"
 export type StageType = "on-stage" | "off-stage"
 export type ResultPosition = "1st" | "2nd" | "3rd" | "participation"
 
-// Points awarded for each position
-export const POSITION_POINTS: Record<ResultPosition, number> = {
-  "1st": 10,
-  "2nd": 7,
-  "3rd": 5,
-  "participation": 1,
-}
-
 // Database table types
 export interface DbEvent {
   id: string
@@ -210,9 +202,20 @@ export type UpdateScore = Partial<InsertScore>
 export type UpdateGalleryItem = Partial<InsertGalleryItem>
 export type UpdateAnnouncement = Partial<InsertAnnouncement>
 
-// Helper function to calculate points from position
-export function getPointsForPosition(position: ResultPosition): number {
-  return POSITION_POINTS[position] || 0
+// Helper functions to calculate points from position
+export function getPointsForPosition(
+  position: ResultPosition, 
+  category: CategoryType, 
+  eventType: EventType = "individual"
+): number {
+  const type = (eventType === "group" || eventType === "team") ? "group" : "individual"
+  const scoringConfig = FEST_CONFIG.scoring[category][type]
+  return scoringConfig[position as keyof typeof scoringConfig] || 0
+}
+
+// Backward compatibility - uses default ART individual scoring
+export function getLegacyPointsForPosition(position: ResultPosition): number {
+  return getPointsForPosition(position, "ART", "individual")
 }
 
 // Festival config
@@ -237,15 +240,15 @@ export const FEST_CONFIG = {
     "Economics",
     "BA Engilsh"
   ],
-  // Scoring system
+  // Scoring system - Different points for Arts vs Sports
   scoring: {
     ART: {
-      group: { "1st": 10, "2nd": 5, "3rd": 3, "participation": 0 },
-      individual: { "1st": 5, "2nd": 3, "3rd": 1, "participation": 0 },
+      group: { "1st": 15, "2nd": 10, "3rd": 5, "participation": 2 },      // Higher for group arts (performances, etc.)
+      individual: { "1st": 8, "2nd": 5, "3rd": 3, "participation": 1 },   // Moderate for individual arts
     },
     SPORTS: {
-      group: { "1st": 10, "2nd": 5, "3rd": 3, "participation": 0 },
-      individual: { "1st": 5, "2nd": 3, "3rd": 1, "participation": 0 },
+      group: { "1st": 20, "2nd": 15, "3rd": 10, "participation": 3 },     // Highest for group sports (team events)
+      individual: { "1st": 12, "2nd": 8, "3rd": 5, "participation": 2 },  // High for individual sports
     },
   },
   // Auto-refresh interval in milliseconds (30 seconds)

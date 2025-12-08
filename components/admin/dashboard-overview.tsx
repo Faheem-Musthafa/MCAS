@@ -212,7 +212,56 @@ export function DashboardOverview() {
         </div>
 
         {/* Today's Events */}
+        <div className="lg:col-span-2 bg-card rounded-xl border border-border overflow-hidden">
+          <div className="p-4 border-b border-border flex items-center gap-2">
+            <Clock size={18} className="text-accent" />
+            <h2 className="font-semibold">Upcoming Events</h2>
+          </div>
+          <div className="divide-y divide-border max-h-80 overflow-y-auto">
+            {todayEvents.map((event) => (
+              <div key={event.id} className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${
+                    event.status === "ongoing" ? "bg-green-500/10 text-green-500" : 
+                    event.status === "completed" ? "bg-gray-500/10 text-gray-500" :
+                    "bg-blue-500/10 text-blue-500"
+                  }`}>
+                    {event.status === "ongoing" ? <PlayCircle size={16} /> :
+                     event.status === "completed" ? <CheckCircle2 size={16} /> :
+                     <Clock size={16} />}
+                  </div>
+                  <div>
+                    <div className="font-medium">{event.title}</div>
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      <span>{event.venue}</span>
+                      <span>•</span>
+                      <span>{event.time_slot}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    event.category === "ART" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
+                  }`}>
+                    {event.category}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 capitalize">
+                    {event.event_type}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {todayEvents.length === 0 && (
+              <div className="p-8 text-center text-muted-foreground text-sm">
+                No upcoming events scheduled
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Scoring System Information */}
+    
 
       {/* Recent Results */}
       {recentResults.length > 0 && (
