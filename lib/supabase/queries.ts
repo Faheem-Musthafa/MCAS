@@ -57,7 +57,6 @@ export async function getEventsByCategory(category: CategoryType): Promise<DbEve
 export async function createEvent(event: {
   title: string
   venue: string
-  date: string
   category: CategoryType
   image?: string | null
 }): Promise<DbEvent> {
@@ -77,7 +76,6 @@ export async function updateEvent(
   event: Partial<{
     title: string
     venue: string
-    date: string
     category: CategoryType
     image: string | null
   }>

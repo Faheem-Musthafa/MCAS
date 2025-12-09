@@ -174,12 +174,12 @@ export function HeroSection() {
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto px-4 sm:px-0">
                 <a 
                   href="#events" 
-                  className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-bold text-sm sm:text-base text-white overflow-hidden transition-transform duration-300 active:scale-95"
+                  className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-bold text-base text-white overflow-hidden transition-transform duration-300 active:scale-95 btn-readable"
                 >
                   {/* Button background */}
                   <div className="absolute inset-0 bg-gradient-to-r from-[var(--art-pink)] via-[var(--art-accent)] to-[var(--art-pink)] bg-[length:200%_100%]" />
                   
-                  <span className="relative flex items-center gap-2">
+                  <span className="relative flex items-center gap-2 text-shadow">
                     <Play size={16} className="fill-current" />
                     Explore Events
                     <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />

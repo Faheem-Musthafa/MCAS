@@ -145,7 +145,183 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-variant-ligatures: contextual;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+  
+  /* Enhanced typography hierarchy */
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-foreground;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+  
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+    line-height: 1.1;
+  }
+  
+  h2 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+  }
+  
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+  
+  p {
+    line-height: 1.7;
+    @apply text-foreground/90;
+  }
+  
+  /* Better button readability */
+  button {
+    font-weight: 600;
+  }
+  
+  /* Improved link styles */
+  a {
+    @apply text-foreground transition-colors;
+  }
+  
+  /* Better form element readability */
+  input, textarea, select {
+    @apply text-foreground;
+    line-height: 1.5;
+  }
+  
+  /* Enhanced code readability */
+  code {
+    @apply bg-muted text-foreground px-1 py-0.5 rounded text-sm;
+  }
+}
+
+/* =============================================== */
+/* READABILITY ENHANCEMENTS                      */
+/* =============================================== */
+
+/* Text contrast utilities */
+.text-high-contrast {
+  @apply text-foreground;
+  font-weight: 500;
+}
+
+.text-medium-contrast {
+  @apply text-foreground/80;
+}
+
+.text-low-contrast {
+  @apply text-foreground/60;
+}
+
+/* Enhanced glass effect for better readability */
+.glass-readable {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+.dark .glass-readable {
+  background: rgba(15, 15, 35, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Better card readability */
+.card-readable {
+  @apply bg-card/90 text-card-foreground border border-border/50;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Enhanced button visibility */
+.btn-readable {
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  @apply shadow-lg;
+}
+
+/* Better text shadows for overlays */
+.text-shadow {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.text-shadow-light {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Focus improvements for accessibility */
+.focus-visible-enhanced:focus-visible {
+  @apply ring-2 ring-primary ring-offset-2 ring-offset-background;
+  outline: none;
+}
+
+/* =============================================== */
+/* READABILITY ENHANCEMENTS                      */
+/* =============================================== */
+
+/* Text contrast utilities */
+.text-high-contrast {
+  @apply text-foreground;
+  font-weight: 500;
+}
+
+.text-medium-contrast {
+  @apply text-foreground/80;
+}
+
+.text-low-contrast {
+  @apply text-foreground/60;
+}
+
+/* Enhanced glass effect for better readability */
+.glass-readable {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+.dark .glass-readable {
+  background: rgba(15, 15, 35, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Better card readability */
+.card-readable {
+  @apply bg-card/90 text-card-foreground border border-border/50;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Enhanced button visibility */
+.btn-readable {
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  @apply shadow-lg;
+}
+
+/* Better text shadows for overlays */
+.text-shadow {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.text-shadow-light {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Focus improvements for accessibility */
+.focus-visible-enhanced:focus-visible {
+  @apply ring-2 ring-primary ring-offset-2 ring-offset-background;
+  outline: none;
 }
 
 /* Premium animations */
@@ -594,47 +770,6 @@
   display: none;
 }
 
-/* Launch Screen Animations */
-@keyframes twinkle {
-  0%, 100% {
-    opacity: 0.2;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-}
-
-@keyframes float-up {
-  0% {
-    transform: translateY(0) translateX(0);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 0.5;
-  }
-  100% {
-    transform: translateY(-100vh) translateX(20px);
-    opacity: 0;
-  }
-}
-
-.animate-twinkle {
-  animation: twinkle 3s ease-in-out infinite;
-}
-
-.animate-float-up {
-  animation: float-up 8s ease-out infinite;
-}
-
-.animation-delay-3000 {
-  animation-delay: 3s;
-}
-
 /* =============================================== */
 /* MOBILE OPTIMIZATIONS - Performance & UX        */
 /* =============================================== */
@@ -848,9 +983,77 @@
   }
   
   .img-zoom:hover img {
-    transform: scale(1.08);
+    transform: scale(1.1);
   }
 }
+
+/* =============================================== */
+/* SEAMLESS SECTION TRANSITIONS                   */
+/* =============================================== */
+
+/* Seamless section flow */
+.seamless-sections > section {
+  position: relative;
+  z-index: 1;
+}
+
+/* Smooth gradient overlay between sections */
+.seamless-sections > section::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(to bottom, transparent, rgba(253, 251, 247, 0.8));
+  pointer-events: none;
+  z-index: 2;
+}
+
+.dark .seamless-sections > section::after {
+  background: linear-gradient(to bottom, transparent, rgba(26, 26, 46, 0.8));
+}
+
+/* Remove overlay from last section */
+.seamless-sections > section:last-child::after {
+  display: none;
+}
+
+/* Section content should sit above the overlay */
+.seamless-sections > section > * {
+  position: relative;
+  z-index: 3;
+}
+
+/* Smooth scrolling for the entire page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Section entrance animations */
+.section-entrance {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section-entrance.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger animation for section content */
+.section-content > * {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section-content.animate > *:nth-child(1) { animation-delay: 0.1s; opacity: 1; transform: translateY(0); }
+.section-content.animate > *:nth-child(2) { animation-delay: 0.2s; opacity: 1; transform: translateY(0); }
+.section-content.animate > *:nth-child(3) { animation-delay: 0.3s; opacity: 1; transform: translateY(0); }
+.section-content.animate > *:nth-child(4) { animation-delay: 0.4s; opacity: 1; transform: translateY(0); }
+.section-content.animate > *:nth-child(5) { animation-delay: 0.5s; opacity: 1; transform: translateY(0); }
 
 /* =============================================== */
 /* RESPONSIVE TYPOGRAPHY                          */

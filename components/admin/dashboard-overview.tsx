@@ -58,9 +58,9 @@ export function DashboardOverview() {
 
       setStats({
         totalEvents: eventsData.length,
-        completedEvents: eventsData.filter((e: DbEvent) => e.status === "completed").length,
-        ongoingEvents: eventsData.filter((e: DbEvent) => e.status === "ongoing").length,
-        upcomingEvents: eventsData.filter((e: DbEvent) => e.status === "upcoming").length,
+        completedEvents: 0,
+        ongoingEvents: 0,
+        upcomingEvents: eventsData.length,
         totalTeams: teamsData.length,
         totalResults: resultsData.length,
         totalGallery: galleryData.length,
@@ -84,7 +84,7 @@ export function DashboardOverview() {
   const topTeams = [...teams].sort((a, b) => b.total_points - a.total_points).slice(0, 3)
 
   // Get today's events (or next day's if none today)
-  const todayEvents = events.filter(e => e.status === "ongoing" || e.status === "upcoming").slice(0, 4)
+  const todayEvents = events.slice(0, 4)
 
   // Calculate fest progress
   const festProgress = stats.totalEvents > 0 

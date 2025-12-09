@@ -95,7 +95,7 @@ export function GallerySection() {
   }
 
   return (
-    <section id="gallery" className="py-16 md:py-24 px-4 md:px-6 relative overflow-hidden bg-transparent">
+    <section id="gallery" className="relative overflow-hidden bg-gradient-to-b from-transparent via-muted/20 to-transparent">
       {/* Floating elements for seamless feel - hidden on mobile for performance */}
       <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[var(--art-purple)]/10 blur-[100px] animate-pulse" />
@@ -106,7 +106,7 @@ export function GallerySection() {
         <div className="blob blob-yellow absolute top-1/2 -right-20 w-[200px] h-[200px] opacity-20" style={{ animationDelay: '2s' }} />
       </div>
       
-      <div className="max-w-7xl mx-auto relative z-10">
+      <div className="max-w-7xl mx-auto relative z-10 px-4 md:px-6 py-16 md:py-24">
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 md:mb-14 gap-4 md:gap-6">
           <div>
@@ -130,7 +130,7 @@ export function GallerySection() {
           </div>
           <a
             href="#events"
-            className="group inline-flex items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 glass-card rounded-full text-xs md:text-sm font-bold text-foreground hover:shadow-xl transition-all duration-300 active:scale-95 lg:hover:scale-105"
+            className="group inline-flex items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 glass-readable rounded-full text-sm md:text-base font-bold text-foreground hover:shadow-xl transition-all duration-300 active:scale-95 lg:hover:scale-105 btn-readable focus-visible-enhanced"
           >
             Browse Events
             <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />

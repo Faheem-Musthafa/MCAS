@@ -180,7 +180,7 @@ export function Navigation() {
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 group",
+                    "flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 group focus-visible-enhanced",
                     activeSection === item.id
                       ? "bg-white/80 dark:bg-white/10 shadow-lg"
                       : "hover:bg-white/50 dark:hover:bg-white/5"

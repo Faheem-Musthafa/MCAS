@@ -69,7 +69,7 @@ export function ScoreboardSection() {
 
   if (loading) {
     return (
-      <section id="scoreboard" className="py-20 md:py-32 relative overflow-hidden bg-radial-pastel">
+      <section id="scoreboard" className="relative overflow-hidden bg-gradient-to-b from-transparent via-muted/30 to-transparent">"`
         <div className="flex flex-col items-center justify-center py-24">
           <div className="relative">
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[var(--art-pink)] to-[var(--art-purple)] blur-xl opacity-50 animate-pulse" />
@@ -82,8 +82,8 @@ export function ScoreboardSection() {
   }
 
   return (
-    <section id="scoreboard" className="py-20 md:py-32 relative overflow-hidden bg-radial-pastel">
-      <div className="container mx-auto px-4 relative">
+    <section id="scoreboard" className="relative overflow-hidden bg-gradient-to-b from-transparent via-muted/30 to-transparent">`
+      <div className="container mx-auto px-4 relative py-20 md:py-32">"`
         {/* Header */}
         <div className="text-center mb-12 md:mb-16">
           <div className="inline-flex items-center gap-3 md:gap-4 mb-6 md:mb-8">

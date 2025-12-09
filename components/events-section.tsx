@@ -14,11 +14,6 @@ const categoryColors: Record<string, { bg: string; text: string; gradient: strin
   SPORTS: { bg: "rgba(212, 240, 240, 0.7)", text: "var(--foreground)", gradient: "from-[var(--art-green)] to-[var(--art-blue)]" },
 }
 
-const statusConfig: Record<string, { icon: React.ElementType; label: string; bg: string; pulse?: boolean }> = {
-  upcoming: { icon: Timer, label: "Upcoming", bg: "rgba(193, 225, 255, 0.8)" },
-  ongoing: { icon: PlayCircle, label: "Live Now", bg: "rgba(255, 143, 171, 0.9)", pulse: true },
-  completed: { icon: CheckCircle2, label: "Completed", bg: "rgba(212, 240, 240, 0.8)" },
-}
 
 export function EventsSection() {
   const [events, setEvents] = useState<DbEvent[]>([])
@@ -72,24 +67,24 @@ export function EventsSection() {
 
 
   return (
-    <section id="events" className="py-16 md:py-24 px-4 md:px-6 relative overflow-hidden bg-transparent">
+    <section id="events" className="relative overflow-hidden bg-gradient-to-b from-transparent via-background/50 to-transparent">
       {/* Floating elements for seamless feel - hidden on mobile for performance */}
       <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 -right-20 w-[350px] h-[350px] rounded-full bg-[var(--art-yellow)]/20 blur-[80px] animate-float-gentle" />
         <div className="absolute bottom-20 -left-20 w-[300px] h-[300px] rounded-full bg-[var(--art-green)]/20 blur-[80px] animate-float-gentle animation-delay-2000" />
       </div>
       
-      <div className="max-w-7xl mx-auto relative z-10">
+      <div className="max-w-7xl mx-auto relative z-10 px-4 md:px-6 py-16 md:py-24">
         {/* Header */}
         <div className="text-center mb-10 md:mb-14">
-          <span className="inline-flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-semibold glass-card rounded-full mb-4 md:mb-5 shadow-lg">
+          <span className="inline-flex items-center gap-2 px-4 py-2 text-sm md:text-base font-semibold glass-card rounded-full mb-4 md:mb-5 shadow-lg text-foreground">
             <Calendar size={14} className="text-[var(--art-accent)]" />
             Event Schedule
           </span>
-          <h2 className="text-3xl md:text-4xl lg:text-6xl font-black tracking-tight text-foreground mb-2 md:mb-3">
+          <h2 className="text-3xl md:text-4xl lg:text-6xl font-black tracking-tight text-foreground mb-3 md:mb-4 leading-tight">
             Event <span className="gradient-text">Schedule</span>
           </h2>
-          <p className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto">
+          <p className="text-base md:text-lg text-foreground/80 max-w-2xl mx-auto leading-relaxed">
             Discover exciting events across arts and sports categories
           </p>
         </div>
@@ -101,7 +96,7 @@ export function EventsSection() {
               <button
                 key={day}
                 onClick={() => setSelectedDay(day)}
-                className={`flex-shrink-0 px-4 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-bold transition-all duration-300 touch-feedback ${
+                className={`flex-shrink-0 px-4 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-bold transition-all duration-300 touch-feedback btn-readable ${
                   selectedDay === day
                     ? "bg-gradient-to-r from-[var(--art-pink)] to-[var(--art-purple)] text-white shadow-lg"
                     : "glass-card hover:bg-white/70 text-muted-foreground hover:text-foreground"
@@ -189,8 +184,6 @@ export function EventsSection() {
         ) : (
           <div className="space-y-4 md:space-y-5">
             {sortedEvents.map((event, index) => {
-              const status = statusConfig[event.status] || statusConfig.upcoming
-              const StatusIcon = status.icon
               const categoryStyle = categoryColors[event.category] || categoryColors.ART
               
               return (
@@ -199,10 +192,6 @@ export function EventsSection() {
                   className="group glass-card rounded-2xl md:rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 animate-slide-up touch-feedback"
                   style={{ animationDelay: `${Math.min(index * 30, 200)}ms` }}
                 >
-                  {/* Live indicator bar */}
-                  {event.status === 'ongoing' && (
-                    <div className="h-1 bg-gradient-to-r from-[var(--art-pink)] via-[var(--art-accent)] to-[var(--art-pink)] animate-shimmer" />
-                  )}
 
                   <div className="flex flex-col md:flex-row">
                     {/* Image - smaller on mobile */}
@@ -221,15 +210,6 @@ export function EventsSection() {
 
                     {/* Content */}
                     <div className="flex-1 p-4 md:p-6 flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
-                      {/* Time */}
-                      <div className="flex md:flex-col items-center md:items-start gap-2 md:text-left md:w-28">
-                        <div className="text-2xl md:text-3xl font-black gradient-text tracking-tight">{event.time_slot?.split(" ")[0] || "TBA"}</div>
-                        <div className="text-xs text-muted-foreground font-medium">{event.time_slot?.split(" ")[1] || ""}</div>
-                      </div>
-
-                      {/* Divider */}
-                      <div className="hidden md:block w-px h-16 bg-gradient-to-b from-transparent via-border to-transparent" />
-
                       {/* Details */}
                       <div className="flex-1 min-w-0">
                         {/* Badges - scrollable on mobile */}
@@ -250,13 +230,6 @@ export function EventsSection() {
                             }}
                           >
                             {event.stage_type === "on-stage" ? "🎤" : "📝"} <span className="hidden sm:inline">{event.stage_type === "on-stage" ? "On-Stage" : "Off-Stage"}</span>
-                          </span>
-                          <span 
-                            className={`px-2.5 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-bold rounded-full flex items-center gap-1 shadow-sm ${status.pulse ? 'animate-pulse' : ''}`}
-                            style={{ background: status.bg, color: 'var(--foreground)' }}
-                          >
-                            <StatusIcon size={10} />
-                            {status.label}
                           </span>
                         </div>
                         <h3 className="text-lg md:text-xl font-bold mb-1.5 md:mb-2 text-foreground group-hover:gradient-text transition-all duration-300 line-clamp-1">{event.title}</h3>

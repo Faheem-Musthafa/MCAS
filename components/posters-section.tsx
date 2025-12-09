@@ -128,7 +128,7 @@ export function PostersSection() {
     <section 
       ref={sectionRef}
       id="results" 
-      className="relative py-16 md:py-32 overflow-hidden bg-transparent"
+      className="relative overflow-hidden bg-gradient-to-b from-transparent via-background/50 to-transparent"
     >
       {/* Simplified background - hidden on mobile */}
       <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
@@ -136,7 +136,7 @@ export function PostersSection() {
         <div className="absolute bottom-1/4 right-1/4 w-64 md:w-96 h-64 md:h-96 rounded-full bg-[var(--art-pink)]/15 blur-[80px]" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 py-16 md:py-32">
         {/* Header */}
         <div className="text-center mb-8 md:mb-16 space-y-2 md:space-y-3">
           <div className="inline-flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-secondary/50 border border-border">

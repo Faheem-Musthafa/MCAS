@@ -1,8 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { LaunchScreen } from "@/components/launch-screen"
-import { Confetti } from "@/components/confetti"
 import { Navigation } from "@/components/navigation"
 import { HeroSection } from "@/components/hero-section"
 import { EventsSection } from "@/components/events-section"
@@ -12,48 +9,10 @@ import { GallerySection } from "@/components/gallery-section"
 import { Footer } from "@/components/footer"
 
 export function HomePage() {
-  const [launched, setLaunched] = useState(false)
-  const [showContent, setShowContent] = useState(false)
-  const [showConfetti, setShowConfetti] = useState(false)
-
-  useEffect(() => {
-    // Check if user has already launched (session storage)
-    const hasLaunched = sessionStorage.getItem("mcas-launched")
-    if (hasLaunched) {
-      setLaunched(true)
-      setShowContent(true)
-    }
-  }, [])
-
-  const handleLaunch = () => {
-    setLaunched(true)
-    sessionStorage.setItem("mcas-launched", "true")
-    // Delay showing content for smooth transition
-    setTimeout(() => {
-      setShowContent(true)
-      // Trigger confetti after content appears
-      setTimeout(() => {
-        setShowConfetti(true)
-        // Auto-hide confetti after animation
-        setTimeout(() => setShowConfetti(false), 5000)
-      }, 300)
-    }, 100)
-  }
-
   return (
     <>
-      {/* Launch Screen */}
-      {!launched && <LaunchScreen onLaunch={handleLaunch} />}
-
-      {/* Confetti celebration effect */}
-      <Confetti isActive={showConfetti} duration={4500} particleCount={100} />
-
       {/* Main Content */}
-      <main 
-        className={`min-h-screen relative overflow-hidden transition-all duration-700 ${
-          showContent ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
+      <main className="min-h-screen relative overflow-hidden">
         {/* Global Seamless Background */}
         <div className="fixed inset-0 -z-10">
           {/* Base Gradient */}
@@ -70,7 +29,7 @@ export function HomePage() {
         
         <Navigation />
         
-        <div className="relative z-10 space-y-0">
+        <div className="relative z-10 seamless-sections">
           <HeroSection />
           <EventsSection />
           <ScoreboardSection />

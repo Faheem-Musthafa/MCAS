@@ -714,7 +714,7 @@ export function ResultsManager() {
             <Medal size={64} className="relative mx-auto mb-6 opacity-50" />
           </div>
           <p className="text-xl font-medium mb-2">No results recorded yet</p>
-          <p className="text-sm opacity-70">Start adding results for completed events</p>
+          <p className="text-sm opacity-70">Start adding results for events</p>
         </div>
       )}
       

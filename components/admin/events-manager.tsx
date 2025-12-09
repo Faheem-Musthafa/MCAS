@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Pencil, Trash2, X, Check, Loader2, Calendar, Clock, MapPin, Users, Plus, RefreshCw } from "lucide-react"
-import type { DbEvent, CategoryType, EventType, EventStatus, StageType } from "@/lib/supabase/types"
+import { Pencil, Trash2, X, Check, Loader2, MapPin, Users, Plus, RefreshCw } from "lucide-react"
+import type { DbEvent, CategoryType, EventType, StageType } from "@/lib/supabase/types"
 import { FEST_CONFIG } from "@/lib/supabase/types"
 
 const EVENT_TYPES: { value: EventType; label: string }[] = [
@@ -16,11 +16,6 @@ const STAGE_TYPES: { value: StageType; label: string; icon: string }[] = [
   { value: "off-stage", label: "Off-Stage", icon: "📝" },
 ]
 
-const EVENT_STATUSES: { value: EventStatus; label: string; color: string }[] = [
-  { value: "upcoming", label: "Upcoming", color: "bg-blue-500/10 text-blue-500" },
-  { value: "ongoing", label: "Ongoing", color: "bg-green-500/10 text-green-500" },
-  { value: "completed", label: "Completed", color: "bg-gray-500/10 text-gray-500" },
-]
 
 
 export function EventsManager() {
@@ -31,20 +26,17 @@ export function EventsManager() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<DbEvent>>({})
   const [showAddForm, setShowAddForm] = useState(false)
-  const [filterStatus, setFilterStatus] = useState<EventStatus | null>(null)
   const [filterStage, setFilterStage] = useState<StageType | null>(null)
   const [filterCategory, setFilterCategory] = useState<CategoryType | null>(null)
   
   const [newEvent, setNewEvent] = useState<Partial<DbEvent>>({
     title: "",
     venue: "",
-    time_slot: "10:00 AM",
     category: "ART",
     stage_type: "off-stage",
     event_type: "individual",
     participant_limit: null,
     registration_open: true,
-    status: "upcoming",
     rules: "",
   })
 
@@ -52,7 +44,6 @@ export function EventsManager() {
     try {
       if (isRefresh) setRefreshing(true)
       const params = new URLSearchParams()
-      if (filterStatus) params.set("status", filterStatus)
       if (filterStage) params.set("stage_type", filterStage)
       if (filterCategory) params.set("category", filterCategory)
       
@@ -66,7 +57,7 @@ export function EventsManager() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [filterStatus, filterStage, filterCategory])
+  }, [filterStage, filterCategory])
 
   useEffect(() => {
     fetchEvents()
@@ -131,29 +122,31 @@ export function EventsManager() {
           setNewEvent({
             title: "",
             venue: "",
-            time_slot: "10:00 AM",
             category: "ART",
             stage_type: "off-stage",
             event_type: "individual",
             participant_limit: null,
             registration_open: true,
-            status: "upcoming",
             rules: "",
           })
           setShowAddForm(false)
+        } else {
+          // Handle error response
+          const errorData = await res.json()
+          console.error("Error creating event:", errorData)
+          alert(`Failed to create event: ${errorData.error || 'Unknown error'}`)
         }
       } catch (error) {
         console.error("Failed to create event:", error)
+        alert("Failed to create event. Please try again.")
       } finally {
         setSaving(false)
       }
+    } else {
+      alert("Please fill in all required fields (Title and Venue)")
     }
   }
 
-  const getStatusBadge = (status: EventStatus) => {
-    const config = EVENT_STATUSES.find((s) => s.value === status)
-    return config || EVENT_STATUSES[0]
-  }
 
   if (loading) {
     return (
@@ -187,10 +180,10 @@ export function EventsManager() {
                 <label className="text-sm font-medium">Event Title *</label>
                 <input
                   type="text"
-                  placeholder="e.g. Solo Singing"
+                  placeholder="Event title"
                   value={newEvent.title}
                   onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                  className="w-full px-4 py-2 bg-secondary rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="w-full px-4 py-3 bg-card/90 text-card-foreground rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary focus-visible-enhanced text-base"
                 />
               </div>
               
@@ -201,17 +194,6 @@ export function EventsManager() {
                   placeholder="e.g. Main Auditorium"
                   value={newEvent.venue}
                   onChange={(e) => setNewEvent({ ...newEvent, venue: e.target.value })}
-                  className="w-full px-4 py-2 bg-secondary rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-accent"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Time</label>
-                <input
-                  type="text"
-                  placeholder="e.g. 10:00 AM"
-                  value={newEvent.time_slot}
-                  onChange={(e) => setNewEvent({ ...newEvent, time_slot: e.target.value })}
                   className="w-full px-4 py-2 bg-secondary rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
@@ -326,9 +308,6 @@ export function EventsManager() {
                   }`}>
                     {event.stage_type === "on-stage" ? "🎤 On-Stage" : "📝 Off-Stage"}
                   </span>
-                  <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusBadge(event.status).color}`}>
-                    {getStatusBadge(event.status).label}
-                  </span>
                 </div>
               </div>
 
@@ -355,17 +334,6 @@ export function EventsManager() {
                         onChange={(e) => setEditForm({ ...editForm, venue: e.target.value })}
                         className="w-full px-3 py-2 bg-secondary rounded-lg border border-border text-sm"
                         placeholder="Venue"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Time</label>
-                      <input
-                        type="text"
-                        value={editForm.time_slot || ""}
-                        onChange={(e) => setEditForm({ ...editForm, time_slot: e.target.value })}
-                        className="w-full px-3 py-2 bg-secondary rounded-lg border border-border text-sm"
-                        placeholder="Time Slot (e.g. 10:00 AM)"
                       />
                     </div>
 
@@ -409,18 +377,7 @@ export function EventsManager() {
                       </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Status</label>
-                      <select
-                        value={editForm.status || "upcoming"}
-                        onChange={(e) => setEditForm({ ...editForm, status: e.target.value as EventStatus })}
-                        className="w-full px-3 py-2 bg-secondary rounded-lg border border-border text-sm"
-                      >
-                        {EVENT_STATUSES.map((s) => (
-                          <option key={s.value} value={s.value}>{s.label}</option>
-                        ))}
-                      </select>
-                    </div>
+
                   </div>
                 ) : (
                   <>
@@ -429,10 +386,6 @@ export function EventsManager() {
                       <div className="flex items-center gap-2">
                         <MapPin size={14} />
                         <span>{event.venue}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock size={14} />
-                        <span>{event.time_slot}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Users size={14} />
@@ -484,7 +437,7 @@ export function EventsManager() {
 
         {events.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            <Calendar size={48} className="mx-auto mb-4 opacity-50" />
+            <Plus size={48} className="mx-auto mb-4 opacity-50" />
             <p>No events found</p>
             <p className="text-sm">Create your first event to get started</p>
           </div>
