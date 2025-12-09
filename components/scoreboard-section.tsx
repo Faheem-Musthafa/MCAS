@@ -8,8 +8,8 @@ import { FEST_CONFIG } from "@/lib/supabase/types"
 
 export function ScoreboardSection() {
   const [teams, setTeams] = useState<DbTeam[]>([])
-  const [artResults, setArtResults] = useState<DbResultWithTeam[]>([])
-  const [sportsResults, setSportsResults] = useState<DbResultWithTeam[]>([])
+  const [allArtResults, setAllArtResults] = useState<DbResultWithTeam[]>([])
+  const [allSportsResults, setAllSportsResults] = useState<DbResultWithTeam[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<'ART' | 'SPORTS'>('ART')
 
@@ -27,11 +27,11 @@ export function ScoreboardSection() {
         }
         if (resultsRes.ok) {
           const resultsData = await resultsRes.json()
-          // Separate results by category
-          const artResultsData = resultsData.filter((r: DbResultWithTeam) => r.event?.category === 'ART').slice(0, 8)
-          const sportsResultsData = resultsData.filter((r: DbResultWithTeam) => r.event?.category === 'SPORTS').slice(0, 8)
-          setArtResults(artResultsData)
-          setSportsResults(sportsResultsData)
+          // Separate results by category - store ALL results for accurate point calculation
+          const artResultsData = resultsData.filter((r: DbResultWithTeam) => r.event?.category === 'ART')
+          const sportsResultsData = resultsData.filter((r: DbResultWithTeam) => r.event?.category === 'SPORTS')
+          setAllArtResults(artResultsData)
+          setAllSportsResults(sportsResultsData)
         }
       } catch (error) {
         console.error("Failed to fetch data:", error)
@@ -54,10 +54,10 @@ export function ScoreboardSection() {
         }
         if (resultsRes.ok) {
           const resultsData = await resultsRes.json()
-          const artResultsData = resultsData.filter((r: DbResultWithTeam) => r.event?.category === 'ART').slice(0, 8)
-          const sportsResultsData = resultsData.filter((r: DbResultWithTeam) => r.event?.category === 'SPORTS').slice(0, 8)
-          setArtResults(artResultsData)
-          setSportsResults(sportsResultsData)
+          const artResultsData = resultsData.filter((r: DbResultWithTeam) => r.event?.category === 'ART')
+          const sportsResultsData = resultsData.filter((r: DbResultWithTeam) => r.event?.category === 'SPORTS')
+          setAllArtResults(artResultsData)
+          setAllSportsResults(sportsResultsData)
         }
       } catch (error) {
         console.error("Failed to fetch updates:", error)
@@ -157,10 +157,11 @@ export function ScoreboardSection() {
             <div className="relative">
               {/* Calculate teams ranking for selected category */}
               {(() => {
-                const currentResults = selectedCategory === 'ART' ? artResults : sportsResults
+                const currentResults = selectedCategory === 'ART' ? allArtResults : allSportsResults
                 const teamsWithCategoryPoints = teams.map(team => {
                   const teamResults = currentResults.filter(r => r.team_id === team.id)
-                  const categoryPoints = teamResults.reduce((sum, r) => sum + (r.points || 0), 0)
+                  // Calculate points - ensure we only add positive values
+                  const categoryPoints = teamResults.reduce((sum, r) => sum + Math.max(0, r.points || 0), 0)
                   const categoryWins = teamResults.filter(r => r.position === '1st').length
                   const categorySilver = teamResults.filter(r => r.position === '2nd').length
                   const categoryBronze = teamResults.filter(r => r.position === '3rd').length
@@ -288,7 +289,7 @@ export function ScoreboardSection() {
           </div>
           
           <div className="p-4 md:p-6">
-            {(selectedCategory === 'ART' ? artResults : sportsResults).length === 0 ? (
+            {(selectedCategory === 'ART' ? allArtResults : allSportsResults).length === 0 ? (
               <div className="text-center py-8 md:py-12">
                 <div className="mb-4 text-4xl md:text-6xl">
                   {selectedCategory === 'ART' ? '🎨' : '🏆'}
@@ -300,7 +301,7 @@ export function ScoreboardSection() {
               </div>
             ) : (
               <div className="space-y-3 md:space-y-4">
-                {(selectedCategory === 'ART' ? artResults : sportsResults).slice(0, 6).map((result) => (
+                {(selectedCategory === 'ART' ? allArtResults : allSportsResults).slice(0, 6).map((result) => (
                   <div key={result.id} className="flex items-center justify-between p-3 md:p-4 rounded-xl bg-white/30 border border-white/20">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">

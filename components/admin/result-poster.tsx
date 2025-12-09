@@ -128,6 +128,7 @@ interface ResultPosterProps {
   data: PosterData
   onClose: () => void
   onSaved?: () => void
+  autoSave?: boolean // Auto-save to gallery when poster is generated
 }
 
 // Updated color scheme based on the reference poster
@@ -138,13 +139,20 @@ const POSITION_COLORS: Record<ResultPosition, { bg: string; text: string; glow: 
   "participation": { bg: "#334155", text: "#F8FAFC", glow: "rgba(51, 65, 85, 0.6)", emoji: "🎖️" }, // Slate
 }
 
-export function ResultPoster({ data, onClose, onSaved }: ResultPosterProps) {
+export function ResultPoster({ data, onClose, onSaved, autoSave = false }: ResultPosterProps) {
   const { event, results } = data
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [imageUrl, setImageUrl] = useState<string>("")
   const [generating, setGenerating] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  // Auto-save when poster is generated
+  useEffect(() => {
+    if (autoSave && imageUrl && !saved && !saving) {
+      savePosterToGallery()
+    }
+  }, [autoSave, imageUrl, saved, saving])
 
   useEffect(() => {
     generatePoster()

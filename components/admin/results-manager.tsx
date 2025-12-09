@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Loader2, Trophy, Medal, Trash2, Award, Check, RefreshCw, Plus, Sparkles, ChevronDown, Users, User, Image } from "lucide-react"
 import type { DbEvent, DbTeam, DbResultWithTeam, ResultPosition } from "@/lib/supabase/types"
 import { FEST_CONFIG } from "@/lib/supabase/types"
@@ -92,6 +92,13 @@ export function ResultsManager() {
       }
     }
   }, [eventForResults, events])
+
+  // Track which events have results published
+  const eventsWithResults = useMemo(() => {
+    const eventIds = new Set<string>()
+    results.forEach(r => eventIds.add(r.event_id))
+    return eventIds
+  }, [results])
 
   const calculatePoints = (position: ResultPosition, eventId?: string) => {
     if (!eventId) return 0
@@ -354,12 +361,13 @@ export function ResultsManager() {
                 <option value="">Choose an event ({events.length} available)</option>
                 {events.map((event) => (
                   <option key={event.id} value={event.id}>
-                    {event.title}
+                    {eventsWithResults.has(event.id) ? "✓ " : ""}{event.title}
                   </option>
                 ))}
               </select>
               <ChevronDown size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             </div>
+            <p className="text-xs text-muted-foreground">✓ = Results already published</p>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -722,6 +730,7 @@ export function ResultsManager() {
       {showPoster && posterData && (
         <ResultPoster
           data={posterData}
+          autoSave={true}
           onClose={() => {
             setShowPoster(false)
             setPosterData(null)

@@ -238,7 +238,7 @@ export const FEST_CONFIG = {
     "Bcom TT",
     "Multimedia",
     "Economics",
-    "BA Engilsh"
+    "BA English"
   ],
   // Scoring system - Different points for Arts vs Sports
   scoring: {

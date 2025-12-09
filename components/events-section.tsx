@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { 
   ArrowRight, Loader2, Calendar, MapPin, Users, 
-  PlayCircle, CheckCircle2, Timer, Sparkles
+  ChevronLeft, ChevronRight, Sparkles
 } from "lucide-react"
 import type { DbEvent } from "@/lib/supabase/types"
 import { FEST_CONFIG } from "@/lib/supabase/types"
@@ -21,6 +21,8 @@ export function EventsSection() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL")
   const [selectedStage, setSelectedStage] = useState<string>("ALL")
+  const [currentPage, setCurrentPage] = useState(1)
+  const EVENTS_PER_PAGE = 3
 
   useEffect(() => {
     async function fetchEvents() {
@@ -63,6 +65,17 @@ export function EventsSection() {
     const timeB = b.time_slot || "00:00"
     return timeA.localeCompare(timeB)
   })
+
+  // Pagination logic
+  const totalPages = Math.ceil(sortedEvents.length / EVENTS_PER_PAGE)
+  const startIndex = (currentPage - 1) * EVENTS_PER_PAGE
+  const endIndex = startIndex + EVENTS_PER_PAGE
+  const paginatedEvents = sortedEvents.slice(startIndex, endIndex)
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedDay, selectedCategory, selectedStage])
 
 
 
@@ -183,7 +196,7 @@ export function EventsSection() {
           </div>
         ) : (
           <div className="space-y-4 md:space-y-5">
-            {sortedEvents.map((event, index) => {
+            {paginatedEvents.map((event, index) => {
               const categoryStyle = categoryColors[event.category] || categoryColors.ART
               
               return (
@@ -259,6 +272,50 @@ export function EventsSection() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {!loading && sortedEvents.length > EVENTS_PER_PAGE && (
+          <div className="flex items-center justify-center gap-3 mt-8 md:mt-10">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-2.5 md:p-3 rounded-xl glass-card hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+            >
+              <ChevronLeft size={20} className="text-foreground" />
+            </button>
+            
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-9 h-9 md:w-10 md:h-10 rounded-xl font-bold text-sm transition-all duration-300 active:scale-95 ${
+                    currentPage === page
+                      ? "bg-gradient-to-r from-[var(--art-pink)] to-[var(--art-purple)] text-white shadow-lg"
+                      : "glass-card hover:shadow-md text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="p-2.5 md:p-3 rounded-xl glass-card hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+            >
+              <ChevronRight size={20} className="text-foreground" />
+            </button>
+          </div>
+        )}
+
+        {/* Events count indicator */}
+        {!loading && sortedEvents.length > 0 && (
+          <div className="text-center mt-4 text-sm text-muted-foreground">
+            Showing {startIndex + 1}-{Math.min(endIndex, sortedEvents.length)} of {sortedEvents.length} events
           </div>
         )}
 

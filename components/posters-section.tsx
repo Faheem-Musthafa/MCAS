@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import { createPortal } from "react-dom"
 import Image from "next/image"
 import { ChevronLeft, ChevronRight, X, Download, Share2, Loader2, Sparkles, Trophy } from "lucide-react"
 import { FEST_CONFIG, type DbPosterWithEvent } from "@/lib/supabase/types"
@@ -10,8 +11,14 @@ export function PostersSection() {
   const [loading, setLoading] = useState(true)
   const [activeIndex, setActiveIndex] = useState(0)
   const [selectedPoster, setSelectedPoster] = useState<DbPosterWithEvent | null>(null)
+  const [mounted, setMounted] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+
+  // For portal mounting
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const fetchPosters = useCallback(async () => {
     try {
@@ -244,10 +251,10 @@ export function PostersSection() {
         </div>
       </div>
 
-      {/* Fullscreen Modal - Mobile optimized */}
-      {selectedPoster && (
+      {/* Fullscreen Modal - Using Portal to escape overflow-hidden */}
+      {mounted && selectedPoster && createPortal(
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-3 md:p-4 safe-area-inset"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-md p-3 md:p-4"
           onClick={() => setSelectedPoster(null)}
         >
           <div 
@@ -287,7 +294,8 @@ export function PostersSection() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   )
