@@ -243,12 +243,12 @@ export const FEST_CONFIG = {
   // Scoring system - Different points for Arts vs Sports
   scoring: {
     ART: {
-      group: { "1st": 15, "2nd": 10, "3rd": 5, "participation": 2 },      // Higher for group arts (performances, etc.)
-      individual: { "1st": 8, "2nd": 5, "3rd": 3, "participation": 1 },   // Moderate for individual arts
+      group: { "1st": 10, "2nd": 5, "3rd": 3 },     
+      individual: { "1st": 5, "2nd": 3, "3rd": 1},
     },
     SPORTS: {
-      group: { "1st": 20, "2nd": 15, "3rd": 10, "participation": 3 },     // Highest for group sports (team events)
-      individual: { "1st": 12, "2nd": 8, "3rd": 5, "participation": 2 },  // High for individual sports
+      group: { "1st": 10, "2nd": 5, "3rd": 3 },     
+      individual: { "1st": 5, "2nd": 3, "3rd": 1},  
     },
   },
   // Auto-refresh interval in milliseconds (30 seconds)
