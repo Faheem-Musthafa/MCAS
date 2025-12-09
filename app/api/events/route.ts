@@ -49,6 +49,7 @@ export async function POST(request: Request) {
       .insert({
         title: body.title,
         venue: body.venue,
+        date: null, // Set to null since we removed date functionality
         day: body.day || 1,
         time_slot: body.time_slot || "TBD",
         category: body.category as CategoryType,

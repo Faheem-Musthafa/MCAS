@@ -13,6 +13,7 @@ export interface DbEvent {
   id: string
   title: string
   venue: string
+  date: string | null // Made nullable for compatibility
   day: number // Day 1, Day 2, etc.
   time_slot: string // e.g., "10:00 AM - 12:00 PM"
   category: CategoryType
@@ -135,6 +136,7 @@ export interface DbTeamStanding extends DbTeam {
 export interface InsertEvent {
   title: string
   venue: string
+  date?: string | null // Made optional and nullable
   day?: number
   time_slot?: string
   category: CategoryType
