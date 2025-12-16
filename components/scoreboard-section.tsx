@@ -14,6 +14,8 @@ export function ScoreboardSection() {
   const [selectedCategory, setSelectedCategory] = useState<'ART' | 'SPORTS'>('ART')
 
   useEffect(() => {
+    let mounted = true
+
     async function fetchData() {
       try {
         const [teamsRes, resultsRes] = await Promise.all([
@@ -21,13 +23,12 @@ export function ScoreboardSection() {
           fetch("/api/results"),
         ])
 
-        if (teamsRes.ok) {
+        if (mounted && teamsRes.ok) {
           const teamsData = await teamsRes.json()
           setTeams(teamsData)
         }
-        if (resultsRes.ok) {
+        if (mounted && resultsRes.ok) {
           const resultsData = await resultsRes.json()
-          // Separate results by category - store ALL results for accurate point calculation
           const artResultsData = resultsData.filter((r: DbResultWithTeam) => r.event?.category === 'ART')
           const sportsResultsData = resultsData.filter((r: DbResultWithTeam) => r.event?.category === 'SPORTS')
           setAllArtResults(artResultsData)
@@ -36,23 +37,24 @@ export function ScoreboardSection() {
       } catch (error) {
         console.error("Failed to fetch data:", error)
       } finally {
-        setLoading(false)
+        if (mounted) setLoading(false)
       }
     }
     fetchData()
 
-    // Poll for updates every 15 seconds
-    const interval = setInterval(async () => {
+    // Poll for updates every 15 seconds - use a safe poll function to avoid unhandled rejections
+    const pollOnce = async () => {
       try {
         const [teamsRes, resultsRes] = await Promise.all([
           fetch("/api/teams"),
           fetch("/api/results"),
         ])
-        if (teamsRes.ok) {
+
+        if (mounted && teamsRes.ok) {
           const teamsData = await teamsRes.json()
           setTeams(teamsData)
         }
-        if (resultsRes.ok) {
+        if (mounted && resultsRes.ok) {
           const resultsData = await resultsRes.json()
           const artResultsData = resultsData.filter((r: DbResultWithTeam) => r.event?.category === 'ART')
           const sportsResultsData = resultsData.filter((r: DbResultWithTeam) => r.event?.category === 'SPORTS')
@@ -60,16 +62,19 @@ export function ScoreboardSection() {
           setAllSportsResults(sportsResultsData)
         }
       } catch (error) {
+        // Log but don't throw - keeps interval safe
         console.error("Failed to fetch updates:", error)
       }
-    }, 15000)
+    }
 
-    return () => clearInterval(interval)
+    const interval = setInterval(() => { pollOnce().catch(err => console.error('Polling error:', err)) }, 15000)
+
+    return () => { mounted = false; clearInterval(interval) }
   }, [])
 
   if (loading) {
     return (
-      <section id="scoreboard" className="relative overflow-hidden bg-gradient-to-b from-transparent via-muted/30 to-transparent">"`
+      <section id="scoreboard" className="relative overflow-hidden bg-gradient-to-b from-transparent via-muted/30 to-transparent">
         <div className="flex flex-col items-center justify-center py-24">
           <div className="relative">
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[var(--art-pink)] to-[var(--art-purple)] blur-xl opacity-50 animate-pulse" />
@@ -82,8 +87,8 @@ export function ScoreboardSection() {
   }
 
   return (
-    <section id="scoreboard" className="relative overflow-hidden bg-gradient-to-b from-transparent via-muted/30 to-transparent">`
-      <div className="container mx-auto px-4 relative py-20 md:py-32">"`
+    <section id="scoreboard" className="relative overflow-hidden bg-gradient-to-b from-transparent via-muted/30 to-transparent">
+      <div className="container mx-auto px-4 relative py-20 md:py-32">
         {/* Header */}
         <div className="text-center mb-12 md:mb-16">
           <div className="inline-flex items-center gap-3 md:gap-4 mb-6 md:mb-8">

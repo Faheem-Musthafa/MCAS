@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import Image from "next/image"
 import { 
   ArrowRight, Loader2, Calendar, MapPin, Users, 
@@ -23,18 +24,34 @@ export function EventsSection() {
   const [selectedStage, setSelectedStage] = useState<string>("ALL")
   const [currentPage, setCurrentPage] = useState(1)
   const EVENTS_PER_PAGE = 3
+  const [selectedPoster, setSelectedPoster] = useState<{ src: string; title?: string } | null>(null)
+  const [posterLoading, setPosterLoading] = useState(false)
+  const [posterError, setPosterError] = useState<string | null>(null)
+  // Close modal on Escape
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setSelectedPoster(null)
+        setPosterError(null)
+      }
+    }
+    if (selectedPoster || posterError) {
+      document.addEventListener('keydown', onKey)
+    }
+    return () => document.removeEventListener('keydown', onKey)
+  }, [selectedPoster, posterError])
 
   useEffect(() => {
     async function fetchEvents() {
       try {
         const response = await fetch("/api/events")
         if (response.ok) {
-          const data = await response.json()
+          const data = (await response.json()) as DbEvent[]
           setEvents(data)
           // Auto-select the first available day
           if (data.length > 0) {
-            const days = [...new Set(data.map((e: DbEvent) => e.day))].sort((a, b) => a - b)
-            setSelectedDay(days[0] || 1)
+            const days = Array.from(new Set(data.map((e: DbEvent) => e.day))).sort((a, b) => a - b)
+            setSelectedDay(days[0] ?? 1)
           } else {
             setSelectedDay(1)
           }
@@ -260,10 +277,36 @@ export function EventsSection() {
 
                       {/* Actions */}
                       <div className="flex gap-2 md:gap-3 md:flex-shrink-0 mt-2 md:mt-0">
-                        <button className="group/btn flex-1 md:flex-none relative px-4 md:px-6 py-2.5 md:py-3 text-xs md:text-sm font-bold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 lg:hover:scale-105" style={{ background: 'linear-gradient(135deg, var(--art-blue), var(--art-green))' }}>
+                        <button
+                          onClick={async () => {
+                            // Fetch posters and open the one matching this event (if available)
+                            setPosterError(null)
+                            setPosterLoading(true)
+                            try {
+                              const res = await fetch('/api/posters')
+                              if (!res.ok) throw new Error('Failed to load posters')
+                              const data = await res.json()
+                              const found = Array.isArray(data) ? data.find((p: any) => (p.event && p.event.id === event.id) || p.event_id === event.id) : null
+                              if (found) {
+                                setSelectedPoster({ src: found.src, title: found.title })
+                              } else {
+                                setPosterError('Poster not available for this event')
+                                setSelectedPoster(null)
+                              }
+                            } catch (e) {
+                              console.error(e)
+                              setPosterError('Failed to load poster')
+                              setSelectedPoster(null)
+                            } finally {
+                              setPosterLoading(false)
+                            }
+                          }}
+                          className="group/btn flex-1 md:flex-none relative px-4 md:px-6 py-2.5 md:py-3 text-xs md:text-sm font-bold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 lg:hover:scale-105"
+                          style={{ background: 'linear-gradient(135deg, var(--art-blue), var(--art-green))' }}
+                        >
                           <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
                           <span className="relative flex items-center justify-center gap-1.5 md:gap-2 text-foreground">
-                            Details <ArrowRight size={12} />
+                            {posterLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Details <ArrowRight size={12} /></>}
                           </span>
                         </button>
                       </div>
@@ -331,6 +374,45 @@ export function EventsSection() {
           </a>
         </div>
       </div>
+
+      {/* Poster Modal (portal) */}
+      {typeof document !== 'undefined' && (selectedPoster || posterError) && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-black/70 p-0 md:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={selectedPoster?.title || 'Event Poster'}
+          onClick={() => { setSelectedPoster(null); setPosterError(null) }}
+        >
+          <div className="w-full md:w-auto md:max-w-3xl max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            {selectedPoster ? (
+              // Bottom-sheet on mobile (rounded top), centered modal on desktop
+              <div className="relative w-full bg-black md:rounded-xl md:overflow-hidden rounded-t-xl shadow-2xl">
+                <div className="w-full h-[56vw] sm:h-[48vw] md:h-[56vh] lg:h-[60vh] relative">
+                  <Image src={selectedPoster.src} alt={selectedPoster.title || 'Event Poster'} fill className="object-contain" sizes="100vw" />
+                </div>
+
+                <div className="flex items-center justify-between gap-3 p-3 md:p-4">
+                  <div className="flex-1 text-left">
+                    <h3 className="text-sm md:text-lg font-bold text-white line-clamp-2">{selectedPoster.title}</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => { setSelectedPoster(null) }} className="p-3 md:p-2 rounded-full bg-white/10 text-white hover:bg-white/20 touch-feedback" aria-label="Close poster">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-card rounded-t-xl md:rounded-xl p-6 text-center">
+                <p className="text-foreground mb-4">{posterError || 'Poster not available'}</p>
+                <button onClick={() => { setPosterError(null) }} className="px-4 py-2 bg-gradient-to-r from-[var(--art-pink)] to-[var(--art-purple)] text-white rounded-md">Close</button>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
     </section>
   )
 }
