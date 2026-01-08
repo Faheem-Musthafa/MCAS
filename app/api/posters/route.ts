@@ -16,7 +16,13 @@ export async function GET() {
       .order("created_at", { ascending: false })
 
     if (error) throw error
-    return NextResponse.json(data)
+    
+    // Cache response for 5 minutes, stale-while-revalidate for 1 hour
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
+      },
+    })
   } catch (error) {
     console.error("Error fetching posters:", error)
     return NextResponse.json({ error: "Failed to fetch posters" }, { status: 500 })

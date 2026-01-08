@@ -251,6 +251,6 @@ export const FEST_CONFIG = {
       individual: { "1st": 5, "2nd": 3, "3rd": 1},  
     },
   },
-  // Auto-refresh interval in milliseconds (30 seconds)
-  refreshInterval: 30000,
+  // Auto-refresh interval in milliseconds (5 minutes - reduces API calls)
+  refreshInterval: 300000,
 }

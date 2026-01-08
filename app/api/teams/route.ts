@@ -12,7 +12,13 @@ export async function GET() {
       .order("total_points", { ascending: false })
 
     if (error) throw error
-    return NextResponse.json(data)
+    
+    // Cache response for 1 minute, stale-while-revalidate for 10 minutes
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=600',
+      },
+    })
   } catch (error) {
     console.error("Error fetching teams:", error)
     return NextResponse.json({ error: "Failed to fetch teams" }, { status: 500 })

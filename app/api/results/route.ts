@@ -33,7 +33,13 @@ export async function GET(request: Request) {
     const { data, error } = await query
 
     if (error) throw error
-    return NextResponse.json(data)
+    
+    // Cache response for 1 minute, stale-while-revalidate for 10 minutes
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=600',
+      },
+    })
   } catch (error) {
     console.error("Error fetching results:", error)
     return NextResponse.json({ error: "Failed to fetch results" }, { status: 500 })

@@ -25,7 +25,13 @@ export async function GET(request: Request) {
     const { data, error } = await query
 
     if (error) throw error
-    return NextResponse.json(data)
+    
+    // Cache response for 2 minutes, stale-while-revalidate for 30 minutes
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=1800',
+      },
+    })
   } catch (error) {
     console.error("Error fetching events:", error)
     return NextResponse.json({ error: "Failed to fetch events" }, { status: 500 })

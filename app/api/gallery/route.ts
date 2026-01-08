@@ -22,7 +22,13 @@ export async function GET(request: Request) {
     const { data, error } = await query
 
     if (error) throw error
-    return NextResponse.json(data)
+    
+    // Cache response for 5 minutes, stale-while-revalidate for 1 hour
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
+      },
+    })
   } catch (error) {
     console.error("Error fetching gallery:", error)
     return NextResponse.json({ error: "Failed to fetch gallery" }, { status: 500 })
