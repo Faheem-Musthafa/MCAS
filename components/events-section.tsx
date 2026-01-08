@@ -5,14 +5,31 @@ import { createPortal } from "react-dom"
 import Image from "next/image"
 import { 
   ArrowRight, Loader2, Calendar, MapPin, Users, 
-  ChevronLeft, ChevronRight, Sparkles
+  ChevronLeft, ChevronRight, Sparkles, Trophy, Medal, Award, X, Download
 } from "lucide-react"
-import type { DbEvent } from "@/lib/supabase/types"
+import type { DbEvent, DbTeam, ResultPosition } from "@/lib/supabase/types"
 import { FEST_CONFIG } from "@/lib/supabase/types"
 
 const categoryColors: Record<string, { bg: string; text: string; gradient: string }> = {
   ART: { bg: "rgba(230, 206, 242, 0.7)", text: "var(--foreground)", gradient: "from-[var(--art-pink)] to-[var(--art-purple)]" },
   SPORTS: { bg: "rgba(212, 240, 240, 0.7)", text: "var(--foreground)", gradient: "from-[var(--art-green)] to-[var(--art-blue)]" },
+}
+
+// Result type for display
+interface EventResult {
+  id: string
+  position: ResultPosition
+  participant_name: string | null
+  points: number
+  team: DbTeam
+}
+
+// Position styling
+const POSITION_STYLES: Record<string, { bg: string; icon: React.ReactNode; label: string }> = {
+  "1st": { bg: "bg-gradient-to-r from-yellow-400 to-amber-500", icon: <Trophy className="w-5 h-5" />, label: "1st Place" },
+  "2nd": { bg: "bg-gradient-to-r from-slate-300 to-slate-400", icon: <Medal className="w-5 h-5" />, label: "2nd Place" },
+  "3rd": { bg: "bg-gradient-to-r from-amber-600 to-amber-700", icon: <Award className="w-5 h-5" />, label: "3rd Place" },
+  "participation": { bg: "bg-gradient-to-r from-slate-500 to-slate-600", icon: <Award className="w-5 h-5" />, label: "Participation" },
 }
 
 
@@ -24,22 +41,28 @@ export function EventsSection() {
   const [selectedStage, setSelectedStage] = useState<string>("ALL")
   const [currentPage, setCurrentPage] = useState(1)
   const EVENTS_PER_PAGE = 3
-  const [selectedPoster, setSelectedPoster] = useState<{ src: string; title?: string } | null>(null)
+  
+  // Results modal state
+  const [selectedEvent, setSelectedEvent] = useState<DbEvent | null>(null)
+  const [eventResults, setEventResults] = useState<EventResult[]>([])
+  const [resultsLoading, setResultsLoading] = useState(false)
+  const [resultsError, setResultsError] = useState<string | null>(null)
+  const [eventPoster, setEventPoster] = useState<string | null>(null)
   const [posterLoading, setPosterLoading] = useState(false)
-  const [posterError, setPosterError] = useState<string | null>(null)
+  
   // Close modal on Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
-        setSelectedPoster(null)
-        setPosterError(null)
+        setSelectedEvent(null)
+        setResultsError(null)
       }
     }
-    if (selectedPoster || posterError) {
+    if (selectedEvent || resultsError) {
       document.addEventListener('keydown', onKey)
     }
     return () => document.removeEventListener('keydown', onKey)
-  }, [selectedPoster, posterError])
+  }, [selectedEvent, resultsError])
 
   useEffect(() => {
     async function fetchEvents() {
@@ -279,26 +302,49 @@ export function EventsSection() {
                       <div className="flex gap-2 md:gap-3 md:flex-shrink-0 mt-2 md:mt-0">
                         <button
                           onClick={async () => {
-                            // Fetch posters and open the one matching this event (if available)
-                            setPosterError(null)
-                            setPosterLoading(true)
+                            // Fetch results for this event
+                            setResultsError(null)
+                            setResultsLoading(true)
+                            setSelectedEvent(event)
+                            setEventPoster(null)
                             try {
-                              const res = await fetch('/api/posters')
-                              if (!res.ok) throw new Error('Failed to load posters')
-                              const data = await res.json()
-                              const found = Array.isArray(data) ? data.find((p: any) => (p.event && p.event.id === event.id) || p.event_id === event.id) : null
-                              if (found) {
-                                setSelectedPoster({ src: found.src, title: found.title })
-                              } else {
-                                setPosterError('Poster not available for this event')
-                                setSelectedPoster(null)
+                              // Fetch results and poster in parallel
+                              const [resultsRes, postersRes] = await Promise.all([
+                                fetch(`/api/results?event_id=${event.id}`),
+                                fetch('/api/posters')
+                              ])
+                              
+                              // Handle results
+                              if (resultsRes.ok) {
+                                const data = await resultsRes.json()
+                                if (Array.isArray(data) && data.length > 0) {
+                                  const sorted = data.sort((a: any, b: any) => {
+                                    const order: Record<string, number> = { "1st": 0, "2nd": 1, "3rd": 2, "participation": 3 }
+                                    return (order[a.position] || 4) - (order[b.position] || 4)
+                                  })
+                                  setEventResults(sorted)
+                                } else {
+                                  setEventResults([])
+                                  setResultsError('No results available for this event yet')
+                                }
+                              }
+                              
+                              // Handle poster
+                              if (postersRes.ok) {
+                                const postersData = await postersRes.json()
+                                const found = Array.isArray(postersData) 
+                                  ? postersData.find((p: any) => (p.event && p.event.id === event.id) || p.event_id === event.id) 
+                                  : null
+                                if (found) {
+                                  setEventPoster(found.src)
+                                }
                               }
                             } catch (e) {
                               console.error(e)
-                              setPosterError('Failed to load poster')
-                              setSelectedPoster(null)
+                              setResultsError('Failed to load results')
+                              setEventResults([])
                             } finally {
-                              setPosterLoading(false)
+                              setResultsLoading(false)
                             }
                           }}
                           className="group/btn flex-1 md:flex-none relative px-4 md:px-6 py-2.5 md:py-3 text-xs md:text-sm font-bold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 lg:hover:scale-105"
@@ -306,7 +352,7 @@ export function EventsSection() {
                         >
                           <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
                           <span className="relative flex items-center justify-center gap-1.5 md:gap-2 text-foreground">
-                            {posterLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Details <ArrowRight size={12} /></>}
+                            {resultsLoading && selectedEvent?.id === event.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Results <Trophy size={12} /></>}
                           </span>
                         </button>
                       </div>
@@ -375,40 +421,121 @@ export function EventsSection() {
         </div>
       </div>
 
-      {/* Poster Modal (portal) */}
-      {typeof document !== 'undefined' && (selectedPoster || posterError) && createPortal(
+      {/* Results Modal (portal) */}
+      {typeof document !== 'undefined' && (selectedEvent || resultsError) && createPortal(
         <div
           className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-black/70 p-0 md:p-4"
           role="dialog"
           aria-modal="true"
-          aria-label={selectedPoster?.title || 'Event Poster'}
-          onClick={() => { setSelectedPoster(null); setPosterError(null) }}
+          aria-label={selectedEvent?.title || 'Event Results'}
+          onClick={() => { setSelectedEvent(null); setResultsError(null); setEventResults([]); setEventPoster(null) }}
         >
-          <div className="w-full md:w-auto md:max-w-3xl max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-            {selectedPoster ? (
-              // Bottom-sheet on mobile (rounded top), centered modal on desktop
-              <div className="relative w-full bg-black md:rounded-xl md:overflow-hidden rounded-t-xl shadow-2xl">
-                <div className="w-full h-[56vw] sm:h-[48vw] md:h-[56vh] lg:h-[60vh] relative">
-                  <Image src={selectedPoster.src} alt={selectedPoster.title || 'Event Poster'} fill className="object-contain" sizes="100vw" />
+          <div className="w-full md:w-auto md:max-w-lg md:min-w-[400px] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            {/* Results Card */}
+            <div className="relative w-full bg-card md:rounded-xl rounded-t-xl shadow-2xl overflow-hidden">
+              {/* Header */}
+              <div className="p-4 md:p-5 border-b border-border bg-gradient-to-r from-[var(--art-pink)]/20 to-[var(--art-purple)]/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg md:text-xl font-bold text-foreground line-clamp-1">{selectedEvent?.title}</h3>
+                    <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ 
+                        background: selectedEvent?.category === 'ART' ? 'rgba(230, 206, 242, 0.7)' : 'rgba(212, 240, 240, 0.7)' 
+                      }}>
+                        {selectedEvent?.category === 'ART' ? '🎨 Arts' : '🏆 Sports'}
+                      </span>
+                      {selectedEvent?.venue && <span>📍 {selectedEvent.venue}</span>}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => { setSelectedEvent(null); setResultsError(null); setEventResults([]); setEventPoster(null) }} 
+                    className="p-2 rounded-full bg-secondary/50 text-foreground hover:bg-secondary transition-colors"
+                    aria-label="Close"
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
+              </div>
 
-                <div className="flex items-center justify-between gap-3 p-3 md:p-4">
-                  <div className="flex-1 text-left">
-                    <h3 className="text-sm md:text-lg font-bold text-white line-clamp-2">{selectedPoster.title}</h3>
+              {/* Results List */}
+              <div className="p-4 md:p-5 max-h-[60vh] overflow-y-auto">
+                {resultsLoading ? (
+                  <div className="flex flex-col items-center justify-center py-10">
+                    <Loader2 className="w-8 h-8 animate-spin text-[var(--art-accent)]" />
+                    <p className="mt-3 text-muted-foreground">Loading results...</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => { setSelectedPoster(null) }} className="p-3 md:p-2 rounded-full bg-white/10 text-white hover:bg-white/20 touch-feedback" aria-label="Close poster">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
+                ) : resultsError ? (
+                  <div className="text-center py-10">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-secondary/50 flex items-center justify-center">
+                      <Trophy className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-muted-foreground">{resultsError}</p>
                   </div>
+                ) : eventResults.length > 0 ? (
+                  <div className="space-y-3">
+                    {eventResults.map((result) => {
+                      const style = POSITION_STYLES[result.position] || POSITION_STYLES["participation"]
+                      return (
+                        <div key={result.id} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors">
+                          {/* Position Badge */}
+                          <div className={`flex-shrink-0 w-12 h-12 rounded-xl ${style.bg} flex items-center justify-center text-white shadow-lg`}>
+                            {style.icon}
+                          </div>
+                          
+                          {/* Details */}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-foreground line-clamp-1">
+                              {result.participant_name || result.team?.name || 'Team Entry'}
+                            </p>
+                            <p className="text-sm text-muted-foreground line-clamp-1">
+                              {result.team?.name} • {style.label}
+                            </p>
+                          </div>
+                          
+                          {/* Points */}
+                          <div className="flex-shrink-0 text-right">
+                            <span className="text-lg font-bold text-[var(--art-accent)]">+{result.points}</span>
+                            <p className="text-xs text-muted-foreground">points</p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <p className="text-muted-foreground">No results yet</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer with Download Button */}
+              {eventPoster && !resultsLoading && (
+                <div className="p-4 border-t border-border bg-secondary/20">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(eventPoster)
+                        const blob = await response.blob()
+                        const url = window.URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `${selectedEvent?.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'poster'}.png`
+                        document.body.appendChild(a)
+                        a.click()
+                        window.URL.revokeObjectURL(url)
+                        document.body.removeChild(a)
+                      } catch (err) {
+                        console.error('Download failed:', err)
+                      }
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[var(--art-pink)] to-[var(--art-purple)] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+                  >
+                    <Download size={18} />
+                    Download Result Poster
+                  </button>
                 </div>
-              </div>
-            ) : (
-              <div className="bg-card rounded-t-xl md:rounded-xl p-6 text-center">
-                <p className="text-foreground mb-4">{posterError || 'Poster not available'}</p>
-                <button onClick={() => { setPosterError(null) }} className="px-4 py-2 bg-gradient-to-r from-[var(--art-pink)] to-[var(--art-purple)] text-white rounded-md">Close</button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>,
         document.body

@@ -341,13 +341,36 @@ export function ResultPoster({ data, onClose, onSaved, autoSave = false }: Resul
     
     setSaving(true)
     try {
-      // Save to posters table (will update if exists for this event)
+      // Convert base64 to blob for upload
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      
+      // Upload to ImgBB
+      const formData = new FormData()
+      formData.append('image', blob)
+      
+      const imgbbResponse = await fetch(
+        `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      )
+      
+      if (!imgbbResponse.ok) {
+        throw new Error('Failed to upload to ImgBB')
+      }
+      
+      const imgbbData = await imgbbResponse.json()
+      const uploadedUrl = imgbbData.data.url
+      
+      // Save URL to posters table (not base64)
       const res = await fetch("/api/posters", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           event_id: event.id,
-          src: imageUrl,
+          src: uploadedUrl, // ImgBB URL instead of base64
           title: `${event.title} - Result`,
         }),
       })
@@ -358,6 +381,7 @@ export function ResultPoster({ data, onClose, onSaved, autoSave = false }: Resul
       }
     } catch (error) {
       console.error("Failed to save poster:", error)
+      alert("Failed to upload poster. Please try again.")
     } finally {
       setSaving(false)
     }
